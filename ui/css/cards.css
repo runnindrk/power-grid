@@ -1,0 +1,17 @@
+#cards-panel {
+  --card-size: 220px;
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 5;
+}
+.info-card {
+  background: var(--panel);
+  border: 1px solid #2a2e37;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}

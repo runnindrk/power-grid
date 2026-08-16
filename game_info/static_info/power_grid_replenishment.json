@@ -1,0 +1,132 @@
+{
+    "2_players": {
+        "1_step": [
+            {
+                "coal": 4,
+                "oil": 2,
+                "trash": 1,
+                "uranium": 1
+            }
+        ],
+        "2_step": [
+            {
+                "coal": 5,
+                "oil": 3,
+                "trash": 2,
+                "uranium": 1
+            }
+        ],
+        "3_step": [
+            {
+                "coal": 3,
+                "oil": 4,
+                "trash": 3,
+                "uranium": 1
+            }
+        ]
+    },
+    "3_players": {
+        "1_step": [
+            {
+                "coal": 4,
+                "oil": 2,
+                "trash": 1,
+                "uranium": 1
+            }
+        ],
+        "2_step": [
+            {
+                "coal": 5,
+                "oil": 3,
+                "trash": 2,
+                "uranium": 1
+            }
+        ],
+        "3_step": [
+            {
+                "coal": 3,
+                "oil": 4,
+                "trash": 3,
+                "uranium": 1
+            }
+        ]
+    },
+    "4_players": {
+        "1_step": [
+            {
+                "coal": 5,
+                "oil": 3,
+                "trash": 2,
+                "uranium": 1
+            }
+        ],
+        "2_step": [
+            {
+                "coal": 6,
+                "oil": 4,
+                "trash": 3,
+                "uranium": 2
+            }
+        ],
+        "3_step": [
+            {
+                "coal": 4,
+                "oil": 5,
+                "trash": 4,
+                "uranium": 2
+            }
+        ]
+    },
+    "5_players": {
+        "1_step": [
+            {
+                "coal": 5,
+                "oil": 4,
+                "trash": 3,
+                "uranium": 2
+            }
+        ],
+        "2_step": [
+            {
+                "coal": 7,
+                "oil": 5,
+                "trash": 3,
+                "uranium": 3
+            }
+        ],
+        "3_step": [
+            {
+                "coal": 5,
+                "oil": 6,
+                "trash": 5,
+                "uranium": 2
+            }
+        ]
+    },
+    "6_players": {
+        "1_step": [
+            {
+                "coal": 7,
+                "oil": 5,
+                "trash": 3,
+                "uranium": 2
+            }
+        ],
+        "2_step": [
+            {
+                "coal": 9,
+                "oil": 6,
+                "trash": 5,
+                "uranium": 3
+            }
+        ],
+        "3_step": [
+            {
+                "coal": 6,
+                "oil": 7,
+                "trash": 6,
+                "uranium": 3
+            }
+        ]
+    }
+}

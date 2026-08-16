@@ -1,0 +1,27 @@
+{
+    "money": [
+        {
+            "00_houses": 10,
+            "01_houses": 22,
+            "02_houses": 33,
+            "03_houses": 44,
+            "04_houses": 54,
+            "05_houses": 64,
+            "06_houses": 73,
+            "07_houses": 82,
+            "08_houses": 90,
+            "09_houses": 98,
+            "10_houses": 105,
+            "11_houses": 112,
+            "12_houses": 118,
+            "13_houses": 124,
+            "14_houses": 129,
+            "15_houses": 134,
+            "16_houses": 138,
+            "17_houses": 142,
+            "18_houses": 145,
+            "19_houses": 148,
+            "20_houses": 150
+        }
+    ]
+}

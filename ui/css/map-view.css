@@ -1,0 +1,63 @@
+.connection-line {
+  stroke: var(--line);
+  stroke-width: 2;
+  transition: stroke 0.15s, stroke-width 0.15s;
+}
+.connection-line.highlight {
+  stroke: var(--line-highlight);
+  stroke-width: 3.5;
+}
+.cost-bg {
+  fill: #1a1d24;
+  stroke-width: 1;
+  opacity: 0.9;
+}
+.cost-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  transition: fill 0.15s;
+}
+.city-dot {
+  stroke: #12151b;
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: r 0.15s, stroke-width 0.15s;
+}
+.map-outline {
+  opacity: 0.35;
+  filter: invert(1) brightness(0.8);
+  pointer-events: none;
+}
+.city-dot:hover, .city-dot.active {
+  stroke: #fff;
+  stroke-width: 2.5;
+}
+.city-label {
+  font-size: 8.8px;
+  fill: var(--text);
+  text-anchor: middle;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #12151b;
+  stroke-width: 3px;
+}
+.map-boundary {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+}
+#tooltip {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid #2a2e37;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  pointer-events: none;
+  display: none;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
