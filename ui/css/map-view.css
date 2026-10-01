@@ -20,24 +20,38 @@
   pointer-events: none;
   transition: fill 0.15s;
 }
-.city-dot {
-  stroke: #12151b;
-  stroke-width: 1.5;
+.city-node {
   cursor: pointer;
-  transition: r 0.15s, stroke-width 0.15s;
+}
+.house-spot {
+  cursor: pointer;
+  outline: none;
+}
+.house-spot-face {
+  stroke: #171a20;
+  stroke-width: 1.5;
+  transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s, filter 0.15s;
+}
+.house-spot:hover:not(:focus) .house-spot-face,
+.house-spot:focus-visible .house-spot-face {
+  stroke: #fff;
+  stroke-width: 2;
+  filter: brightness(1.2);
+}
+.house-mark {
+  fill: #fff;
+  stroke: #171a20;
+  stroke-width: 0.65;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 .map-outline {
   opacity: 0.35;
   filter: invert(1) brightness(0.8);
   pointer-events: none;
 }
-.city-dot:hover, .city-dot.active {
-  stroke: #fff;
-  stroke-width: 2.5;
-}
 .city-label {
   font-size: 8.8px;
-  fill: var(--text);
   text-anchor: middle;
   pointer-events: none;
   paint-order: stroke;
@@ -60,4 +74,28 @@
   display: none;
   z-index: 10;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+#map-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+#player-select {
+  border: 1px solid #4a505a;
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: #12151b;
+  color: var(--text);
+  font: inherit;
+}
+#placement-status {
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  #map-controls {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
 }

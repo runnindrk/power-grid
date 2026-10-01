@@ -13,9 +13,13 @@
 <header>
   <h1>Power Grid</h1>
   <span id="stats"></span>
+  <div id="map-controls">
+    <label for="player-select">Place house for</label>
+    <select id="player-select"></select>
+    <span id="placement-status" aria-live="polite"></span>
+  </div>
 </header>
 <main>
-  <aside id="side-panel"></aside>
   <div id="map-panel">
     <svg id="map"></svg>
   </div>

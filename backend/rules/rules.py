@@ -1,18 +1,28 @@
 import random
-from pydantic import BaseModel
+from enum import IntEnum
+from typing import TypedDict
 
-class MapMatrix(BaseModel):
+
+class ErrorCode(IntEnum):
+    E_OK = 0
+    E_NOT_OKAY = 1
+
+
+class MapMatrix(TypedDict):
     matrix: list[list[int]]
 
-class ResourceStock(BaseModel):
-    coal: int = 0
-    oil: int = 0
-    trash: int = 0
-    uranium: int = 0
 
-class GameState(BaseModel):
+class ResourceStock(TypedDict, total=False):
+    coal: int
+    oil: int
+    trash: int
+    uranium: int
+
+
+class GameState(TypedDict):
     number_of_players: int
     regions_chosen: list[str]
+    rounds_played: int
     step: int
     phase: int
     power_plant_market: list[int]
@@ -23,11 +33,6 @@ class GameState(BaseModel):
     player_resources: dict[str, ResourceStock]
     map_houses: dict[str, dict]
 
-# Load
-state = GameState.model_validate_json(json_string)
-
-# Save
-json_string = state.model_dump_json(indent=4)
 
 # Phase 1: Determine player order
 def determine_player_order(players: list[str]) -> list[str]:
@@ -44,8 +49,8 @@ def buy_resources(player: str, resources: ResourceStock, market: ResourceStock) 
     return False
 
 # Phase 4: Building Houses
-def build_house(player: str, city: str, map_houses: dict[str, dict]) -> bool:
-    return False
+def build_house(player: str, city: str, map_houses: dict[str, dict]) -> ErrorCode:
+    return ErrorCode.E_OK
 
 # Phase 5: Bureaucracy
 def bureaucracy(state: GameState) -> None:

@@ -1,77 +1,284 @@
 {
-    "number_of_players" : 4,
-    "regions_chosen" : ["blue", "red", "green", "orange"],
-    "rounds_played" : 0,
-    "step" : 1,
-    "phase" : 1,
-    "power_plant_market" : [3, 4, 6, 7, 9, 12, 13, 15],
-    "resource_market" : {
-        "coal" :    24,
-        "oil" :     18,
-        "trash" :   6,
-        "uranium" : 2
+    "number_of_players": 4,
+    "regions_chosen": [
+        "blue",
+        "red",
+        "green",
+        "orange"
+    ],
+    "rounds_played": 0,
+    "step": 1,
+    "phase": 1,
+    "power_plant_market": [
+        3,
+        4,
+        6,
+        7,
+        9,
+        12,
+        13,
+        15
+    ],
+    "resource_market": {
+        "coal": 24,
+        "oil": 18,
+        "trash": 6,
+        "uranium": 2
     },
-    "player_turn_order" : ["p1", "p2", "p3", "p4"],
-    "player_money" : {
-        "p1" : 50,
-        "p2" : 50,
-        "p3" : 50,
-        "p4" : 50
+    "player_turn_order": [
+        "p1",
+        "p2",
+        "p3",
+        "p4"
+    ],
+    "player_money": {
+        "p1": 50,
+        "p2": 50,
+        "p3": 50,
+        "p4": 50
     },
-    "player_power_plants" : {
-        "p1" : [],
-        "p2" : [],
-        "p3" : [],
-        "p4" : []
+    "player_power_plants": {
+        "p1": [],
+        "p2": [],
+        "p3": [],
+        "p4": []
     },
-    "player_resouces" : {
-        "p1" : {"coal": 0, "oil": 0, "trash": 0, "uranium": 0},
-        "p2" : {"coal": 0, "oil": 0, "trash": 0, "uranium": 0},
-        "p3" : {"coal": 0, "oil": 0, "trash": 0, "uranium": 0},
-        "p4" : {"coal": 0, "oil": 0, "trash": 0, "uranium": 0}
+    "player_resources": {
+        "p1": {
+            "coal": 0,
+            "oil": 0,
+            "trash": 0,
+            "uranium": 0
+        },
+        "p2": {
+            "coal": 0,
+            "oil": 0,
+            "trash": 0,
+            "uranium": 0
+        },
+        "p3": {
+            "coal": 0,
+            "oil": 0,
+            "trash": 0,
+            "uranium": 0
+        },
+        "p4": {
+            "coal": 0,
+            "oil": 0,
+            "trash": 0,
+            "uranium": 0
+        }
     },
-    "map_houses" : {
-        "Flensburg" :     {"spot_1" : "p1", "spot_2" : null, "spot_3" : null},
-        "Kiel" :          {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Hamburg" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Cuxhaven" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Bremen" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Wilhelmshaven" : {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Hannover" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Lübeck" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Schwerin" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Rostock" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Stralsund" :     {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Magdeburg" :     {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Berlin" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Frankfurt-O" :   {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Osnabrück" :     {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Münster" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Dortmund" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Essen" :         {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Duisburg" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Düsseldorf" :    {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Kassel" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Halle" :         {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Leipzig" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Erfurt" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Dresden" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Fulda" :         {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Würzburg" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Nürnberg" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Köln" :          {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Aachen" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Trier" :         {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Mainz" :         {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Frankfurt-M" :   {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Saarbrücken" :   {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Mannheim" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Stuttgart" :     {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Freiburg" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Konstanz" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Augsburg" :      {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Regensburg" :    {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "München" :       {"spot_1" : null, "spot_2" : null, "spot_3" : null},
-        "Passau" :        {"spot_1" : null, "spot_2" : null, "spot_3" : null}
+    "map_houses": {
+        "Flensburg": {
+            "spot_1": "p1",
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Kiel": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Hamburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Cuxhaven": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Bremen": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Wilhelmshaven": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Hannover": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Lübeck": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Schwerin": {
+            "spot_1": "p1",
+            "spot_2": "p3",
+            "spot_3": "p2"
+        },
+        "Rostock": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Stralsund": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Magdeburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Berlin": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Frankfurt-O": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Osnabrück": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Münster": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Dortmund": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Essen": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Duisburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Düsseldorf": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Kassel": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Halle": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Leipzig": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Erfurt": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Dresden": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Fulda": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Würzburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Nürnberg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Köln": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Aachen": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Trier": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Mainz": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Frankfurt-M": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Saarbrücken": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Mannheim": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Stuttgart": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Freiburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Konstanz": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Augsburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Regensburg": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "München": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        },
+        "Passau": {
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
+        }
     }
 }

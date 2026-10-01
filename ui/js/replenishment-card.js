@@ -1,3 +1,6 @@
+import { fetchJson } from './data-source.js';
+import { htmlElement } from './dom-utils.js';
+
 const REPLENISHMENT_DATA_URL = '../../game_info/static_info/power_grid_replenishment.json';
 
 const resourceIcons = {
@@ -11,21 +14,21 @@ function renderReplenishmentCard(replenishmentData, gameState) {
   const players = replenishmentData[playerKey] || replenishmentData[Object.keys(replenishmentData)[0]];
   const stepKeys = Object.keys(players);
 
-  const card = document.createElement('div');
-  card.className = 'info-card replenishment-card';
+  const card = htmlElement('div', { className: 'info-card replenishment-card' });
+  const header = htmlElement('div', { className: 'replenishment-header' });
+  const playerSlot = htmlElement('div', { className: 'player-slot' });
+  playerSlot.appendChild(htmlElement('span', {
+    className: 'player-badge',
+    title: 'Number of players',
+    textContent: numPlayers ?? '-',
+  }));
+  header.appendChild(playerSlot);
 
-  const header = document.createElement('div');
-  header.className = 'replenishment-header';
-  header.innerHTML = `<div class="player-slot"><span class="player-badge" title="Number of players">${numPlayers ?? '-'}</span></div>`;
-  const stepBadges = document.createElement('div');
-  stepBadges.className = 'step-badges';
+  const stepBadges = htmlElement('div', { className: 'step-badges' });
   stepKeys.forEach((stepKey) => {
     const stepNum = parseInt(stepKey, 10);
-    const slot = document.createElement('div');
-    slot.className = 'step-slot';
-    const badge = document.createElement('span');
-    badge.className = 'step-badge';
-    badge.textContent = stepNum;
+    const slot = htmlElement('div', { className: 'step-slot' });
+    const badge = htmlElement('span', { className: 'step-badge', textContent: stepNum });
     if (stepNum === currentStep) badge.classList.add('current');
     slot.appendChild(badge);
     stepBadges.appendChild(slot);
@@ -33,19 +36,13 @@ function renderReplenishmentCard(replenishmentData, gameState) {
   header.appendChild(stepBadges);
   card.appendChild(header);
 
-  const grid = document.createElement('div');
-  grid.className = 'replenishment-grid';
+  const grid = htmlElement('div', { className: 'replenishment-grid' });
   Object.keys(resourceIcons).forEach((resource, i) => {
-    const row = document.createElement('div');
-    row.className = `replenishment-row ${i % 2 === 0 ? 'dark' : 'light'}`;
-    const icon = document.createElement('div');
-    icon.className = 'resource-icon';
-    icon.textContent = resourceIcons[resource];
+    const row = htmlElement('div', { className: `replenishment-row ${i % 2 === 0 ? 'dark' : 'light'}` });
+    const icon = htmlElement('div', { className: 'resource-icon', textContent: resourceIcons[resource] });
     row.appendChild(icon);
     stepKeys.forEach((stepKey) => {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.textContent = players[stepKey][0][resource];
+      const cell = htmlElement('div', { className: 'cell', textContent: players[stepKey][0][resource] });
       if (parseInt(stepKey, 10) === currentStep) cell.classList.add('current');
       row.appendChild(cell);
     });
@@ -56,7 +53,6 @@ function renderReplenishmentCard(replenishmentData, gameState) {
 }
 
 export async function initReplenishmentCard(container, gameState) {
-  const res = await fetch(REPLENISHMENT_DATA_URL);
-  const replenishmentData = await res.json();
+  const replenishmentData = await fetchJson(REPLENISHMENT_DATA_URL);
   container.appendChild(renderReplenishmentCard(replenishmentData, gameState));
 }

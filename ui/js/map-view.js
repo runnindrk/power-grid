@@ -1,16 +1,18 @@
 import { el } from './dom-utils.js';
+import { fetchJson } from './data-source.js';
+import { requestHousePlacement } from './house-api.js';
+import { createMapModel, MAP_DATA_URL, OUTLINE_IMAGE_URL } from './map-model.js';
 
-const MAP_DATA_URL = '../../game_info/maps/germany/power_grid_germany_map.json';
-const OUTLINE_IMAGE_URL = '../../game_info/maps/germany/germany_outline.jpg';
-const SCALE = 1.25;
+const PLAYER_COLORS = ['#e85d5d', '#519cde', '#43a047', '#fb8c00', '#9445aa', '#fdd835'];
+const HOUSE_SPOTS = ['spot_1', 'spot_2', 'spot_3'];
 
 const regionColors = {
   Green: '#43a047',
   Orange: '#fb8c00',
   Red: '#e53935',
   Yellow: '#fdd835',
-  Blue: '#1e88e5',
-  Purple: '#8e24aa',
+  Blue: '#519cde',
+  Purple: '#9445aa',
 };
 
 // Low costs read brownish, mid costs grey, high costs yellow.
@@ -30,34 +32,49 @@ function costColor(cost, min, max) {
   return `rgb(${rgb.join(',')})`;
 }
 
-export async function initMap() {
-  const res = await fetch(MAP_DATA_URL);
-  const data = await res.json();
+function wedgePath(cx, cy, radius, startAngle, endAngle) {
+  const point = (angle) => {
+    const radians = (angle * Math.PI) / 180;
+    return [cx + Math.cos(radians) * radius, cy + Math.sin(radians) * radius];
+  };
+  const [startX, startY] = point(startAngle);
+  const [endX, endY] = point(endAngle);
+  return `M ${cx} ${cy} L ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY} Z`;
+}
 
-  const [width, height] = data.map_size[0].map((v) => v * SCALE);
-  const cities = data.cities_positions.map(([name, region, x, y]) => ({ name, region, x: x * SCALE, y: y * SCALE }));
-  // Rows may interleave "<cost>, <cityName>" pairs to ease manual editing; strip the names back out.
-  const matrix = data.connection_matrix.map((row) => row.filter((v) => typeof v !== 'string'));
+function housePath(cx, cy) {
+  return `M ${cx - 4} ${cy} L ${cx} ${cy - 3.5} L ${cx + 4} ${cy} V ${cy + 4} H ${cx + 1.5} V ${cy + 1} H ${cx - 1.5} V ${cy + 4} H ${cx - 4} Z`;
+}
+
+export async function initMap(gameState) {
+  const model = createMapModel(await fetchJson(MAP_DATA_URL));
+  const { width, height, cities, connections, neighbors, minCost, maxCost } = model;
 
   const svg = document.getElementById('map');
+  const tooltip = document.getElementById('tooltip');
+  const playerSelect = document.getElementById('player-select');
+  const placementStatus = document.getElementById('placement-status');
+  const players = gameState.player_turn_order;
+  const houses = gameState.map_houses;
+  let selectedPlayer = players[0];
+  let isSavingHouse = false;
+
+  players.forEach((player, index) => {
+    const option = document.createElement('option');
+    option.value = player;
+    option.textContent = player;
+    option.style.color = PLAYER_COLORS[index % PLAYER_COLORS.length];
+    playerSelect.appendChild(option);
+  });
+  playerSelect.addEventListener('change', () => {
+    selectedPlayer = playerSelect.value;
+    placementStatus.textContent = `Editing houses for ${selectedPlayer}`;
+  });
+  placementStatus.textContent = `Editing houses for ${selectedPlayer}`;
+
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
-
-  // Build unique connection list (i < j) from the matrix, tolerating asymmetric entries.
-  const connections = [];
-  for (let i = 0; i < matrix.length; i++) {
-    for (let j = i + 1; j < matrix.length; j++) {
-      const cost = matrix[i][j] ?? matrix[j][i];
-      if (cost !== null && cost !== undefined) {
-        connections.push({ a: i, b: j, cost });
-      }
-    }
-  }
-
-  const costValues = connections.map((c) => c.cost).filter((c) => c !== 0);
-  const minCost = Math.min(...costValues);
-  const maxCost = Math.max(...costValues);
 
   const boundary = el('rect', {
     class: 'map-boundary', x: 1, y: 1, width: width - 2, height: height - 2,
@@ -73,12 +90,6 @@ export async function initMap() {
   const citiesLayer = el('g', { id: 'cities' });
   svg.appendChild(linesLayer);
   svg.appendChild(citiesLayer);
-
-  const neighborMap = new Map(cities.map((_, i) => [i, new Set()]));
-  connections.forEach(({ a, b }) => {
-    neighborMap.get(a).add(b);
-    neighborMap.get(b).add(a);
-  });
 
   connections.forEach(({ a, b, cost }) => {
     const ca = cities[a], cb = cities[b];
@@ -108,47 +119,122 @@ export async function initMap() {
     linesLayer.appendChild(text);
   });
 
-  const tooltip = document.getElementById('tooltip');
-
   cities.forEach((city, i) => {
-    const dot = el('circle', {
-      class: 'city-dot', cx: city.x, cy: city.y, r: 11,
-      fill: regionColors[city.region] || '#888', 'data-index': i,
+    const cityGroup = el('g', { class: 'city-node', 'data-index': i });
+    const occupiedSpots = houses[city.name];
+
+    HOUSE_SPOTS.forEach((spot, spotIndex) => {
+      const startAngle = -90 + spotIndex * 120;
+      const endAngle = startAngle + 120;
+      const middleAngle = (startAngle + endAngle) / 2;
+      const markRadius = 5.5;
+      const markX = city.x + Math.cos((middleAngle * Math.PI) / 180) * markRadius;
+      const markY = city.y + Math.sin((middleAngle * Math.PI) / 180) * markRadius;
+      const spotGroup = el('g', {
+        class: 'house-spot', role: 'button', tabindex: 0,
+        'aria-label': `${city.name}, ${spot.replace('_', ' ')}: ${occupiedSpots[spot] || 'empty'}`,
+      });
+      const face = el('path', {
+        class: 'house-spot-face',
+        d: wedgePath(city.x, city.y, 11, startAngle, endAngle),
+        fill: occupiedSpots[spot] ? playerColor(occupiedSpots[spot]) : '#30343b',
+      });
+      const mark = el('path', {
+        class: 'house-mark', d: housePath(markX, markY),
+        display: occupiedSpots[spot] ? 'inline' : 'none',
+      });
+      const title = el('title', {});
+      title.textContent = `${city.name} ${spot.replace('_', ' ')}: ${occupiedSpots[spot] || 'empty'}`;
+      spotGroup.append(face, mark, title);
+
+      const activateSpot = async () => {
+        if (isSavingHouse) return;
+
+        isSavingHouse = true;
+        playerSelect.disabled = true;
+        placementStatus.textContent = 'Saving house placement';
+        try {
+          const expectedOwner = occupiedSpots[spot] === selectedPlayer ? null : selectedPlayer;
+          const updatedState = await requestHousePlacement(selectedPlayer, city.name, spot);
+          if (updatedState.map_houses?.[city.name]?.[spot] !== expectedOwner) {
+            throw new Error('Server response did not confirm the house placement');
+          }
+          houses[city.name][spot] = updatedState.map_houses[city.name][spot];
+          updateSpot(spotGroup, city.name, spot, houses[city.name][spot]);
+          placementStatus.textContent = expectedOwner
+            ? `Placed ${selectedPlayer}'s house in ${city.name}`
+            : `Removed ${selectedPlayer}'s house from ${city.name}`;
+        } catch (error) {
+          placementStatus.textContent = error.message;
+        } finally {
+          isSavingHouse = false;
+          playerSelect.disabled = false;
+        }
+      };
+      spotGroup.addEventListener('click', activateSpot);
+      spotGroup.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          activateSpot();
+        }
+      });
+      cityGroup.appendChild(spotGroup);
     });
+
     const label = el('text', {
-      class: 'city-label', x: city.x, y: city.y + 12,
+      class: 'city-label', x: city.x, y: city.y + 14,
+      fill: regionColors[city.region] || '#888',
     });
     label.textContent = city.name;
-    citiesLayer.appendChild(dot);
-    citiesLayer.appendChild(label);
+    cityGroup.appendChild(label);
+    citiesLayer.appendChild(cityGroup);
 
-    dot.addEventListener('mouseenter', () => setActive(i));
-    dot.addEventListener('mouseleave', clearActive);
-    dot.addEventListener('mousemove', (evt) => showTooltip(evt, city));
+    cityGroup.addEventListener('mouseenter', () => setActive(i));
+    cityGroup.addEventListener('mouseleave', clearActive);
+    cityGroup.addEventListener('mousemove', (evt) => showTooltip(evt, city));
   });
 
+  function playerColor(player) {
+    const playerIndex = players.indexOf(player);
+    return PLAYER_COLORS[(playerIndex < 0 ? 0 : playerIndex) % PLAYER_COLORS.length];
+  }
+
+  function updateSpot(spotGroup, cityName, spot, owner) {
+    const label = `${cityName}, ${spot.replace('_', ' ')}: ${owner || 'empty'}`;
+    spotGroup.querySelector('.house-spot-face').setAttribute('fill', owner ? playerColor(owner) : '#30343b');
+    spotGroup.querySelector('.house-mark').setAttribute('display', owner ? 'inline' : 'none');
+    spotGroup.setAttribute('aria-label', label);
+    spotGroup.querySelector('title').textContent = label;
+  }
+
   function setActive(i) {
-    document.querySelectorAll('.connection-line, .cost-label').forEach((elm) => {
+    linesLayer.querySelectorAll('.connection-line, .cost-label').forEach((elm) => {
       const a = +elm.getAttribute('data-a'), b = +elm.getAttribute('data-b');
       elm.classList.toggle('highlight', a === i || b === i);
     });
-    document.querySelectorAll('.city-dot').forEach((elm) => {
+
+    citiesLayer.querySelectorAll('.city-node').forEach((elm) => {
       elm.classList.toggle('active', +elm.getAttribute('data-index') === i);
     });
   }
 
   function clearActive() {
-    document.querySelectorAll('.connection-line, .cost-label').forEach((elm) => elm.classList.remove('highlight'));
-    document.querySelectorAll('.city-dot').forEach((elm) => elm.classList.remove('active'));
+    linesLayer.querySelectorAll('.connection-line, .cost-label').forEach((elm) => elm.classList.remove('highlight'));
+    citiesLayer.querySelectorAll('.city-node').forEach((elm) => elm.classList.remove('active'));
     tooltip.style.display = 'none';
   }
 
   function showTooltip(evt, city) {
-    const neighborCount = neighborMap.get(cities.indexOf(city)).size;
+    const neighborCount = neighbors.get(cities.indexOf(city)).size;
+    const houseCount = Object.values(houses[city.name]).filter(Boolean).length;
     tooltip.style.display = 'block';
     tooltip.style.left = (evt.pageX + 14) + 'px';
     tooltip.style.top = (evt.pageY + 14) + 'px';
-    tooltip.innerHTML = `<strong>${city.name}</strong><br>Region: ${city.region}<br>Connections: ${neighborCount}`;
+    const heading = document.createElement('strong');
+    heading.textContent = city.name;
+    tooltip.replaceChildren(heading);
+    [`Region: ${city.region}`, `Connections: ${neighborCount}`, `Houses: ${houseCount}/3`]
+      .forEach((detail) => tooltip.append(document.createElement('br'), detail));
   }
 
   document.getElementById('stats').textContent =
