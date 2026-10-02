@@ -1,0 +1,118 @@
+#player-board {
+  --player-tile: var(--card-size);
+  --player-row-min-width: calc(var(--player-tile) * 5 + var(--card-gap) * 4);
+  position: absolute;
+  top: 12px;
+  left: 8px;
+  z-index: 4;
+  width: min(var(--dashboard-width), calc(100vw - 16px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.player-row {
+  width: 100%;
+  min-width: var(--player-row-min-width);
+  display: grid;
+  grid-template-columns: repeat(5, var(--player-tile));
+  gap: var(--card-gap);
+}
+.player-plant-slot,
+.player-info {
+  width: var(--player-tile);
+  height: var(--player-tile);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #3a404b;
+  border-radius: 6px;
+  background: #1a1d24;
+}
+.player-plant-slot {
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.player-plant-slot:not(.empty) {
+  border-color: var(--player-color);
+  background: #22262e;
+}
+.player-plant-slot.empty {
+  border-style: dashed;
+  background: rgba(26, 29, 36, 0.88);
+}
+.empty-slot-label {
+  color: #686f7a;
+  font-size: 10px;
+  font-weight: 500;
+}
+.player-info {
+  grid-column: span 2;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3px;
+  padding: 6px;
+  border-top: 3px solid var(--player-color);
+  background: rgba(26, 29, 36, 0.96);
+}
+.player-info-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.player-name {
+  font-size: 12px;
+  font-weight: 750;
+}
+.player-money {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.player-network {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.network-count {
+  font-size: 19px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.network-label {
+  color: var(--muted);
+  font-size: 9px;
+}
+.player-resources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 4px;
+}
+.player-resource {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.player-resource-icon {
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  #player-board {
+    top: 8px;
+    left: 8px;
+  }
+}

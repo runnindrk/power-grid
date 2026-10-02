@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="css/cards.css">
 <link rel="stylesheet" href="css/money-card.css">
 <link rel="stylesheet" href="css/replenishment-card.css">
+<link rel="stylesheet" href="css/power-plant-market.css">
+<link rel="stylesheet" href="css/player-board.css">
+<link rel="stylesheet" href="css/resource-market.css">
 </head>
 <body>
 <header>
@@ -20,11 +23,20 @@
   </div>
 </header>
 <main>
+  <section id="player-board" aria-label="Player boards"></section>
   <div id="map-panel">
     <svg id="map"></svg>
   </div>
   <div id="tooltip"></div>
-  <div id="cards-panel"></div>
+  <div id="cards-panel">
+    <section id="resource-market" aria-label="Resource market"></section>
+    <div class="cards-board">
+      <div id="info-cards"></div>
+      <section id="power-plant-market" aria-label="Power plant market">
+        <div class="power-plant-grid"></div>
+      </section>
+    </div>
+  </div>
 </main>
 
 <script type="module" src="js/main.js"></script>

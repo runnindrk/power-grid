@@ -1,17 +1,26 @@
 import { initMap } from './map-view.js';
 import { initMoneyCard } from './money-card.js';
+import { initPlayerBoard } from './player-board.js';
+import { initPowerPlantMarket } from './power-plant-market.js';
 import { initReplenishmentCard } from './replenishment-card.js';
+import { initResourceMarket } from './resource-market.js';
 import { fetchGameState } from './game-state.js';
 
 async function initCards(gameState) {
-  const cardsPanel = document.getElementById('cards-panel');
-  await initMoneyCard(cardsPanel);
-  await initReplenishmentCard(cardsPanel, gameState);
+  const infoCards = document.getElementById('info-cards');
+  await initMoneyCard(infoCards);
+  await initReplenishmentCard(infoCards, gameState);
 }
 
 async function init() {
   const gameState = await fetchGameState();
-  await Promise.all([initMap(gameState), initCards(gameState)]);
+  await Promise.all([
+    initMap(gameState),
+    initCards(gameState),
+    initPowerPlantMarket(gameState),
+    initPlayerBoard(gameState),
+  ]);
+  initResourceMarket(gameState);
 }
 
 init().catch((error) => {

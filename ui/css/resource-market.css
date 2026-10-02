@@ -1,0 +1,93 @@
+#resource-market {
+  --resource-slot-size: 8px;
+  width: var(--dashboard-width);
+  height: var(--resource-market-height);
+  flex: 0 0 var(--resource-market-height);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(26, 29, 36, 0.92);
+  border: 1px solid #3a404b;
+  border-radius: 6px;
+}
+.resource-rack {
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 2px;
+  border-bottom: 1px solid rgba(120, 129, 142, 0.18);
+}
+.resource-price-rack {
+  min-width: 0;
+  flex: 0 0 16px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 2px;
+}
+.resource-rack-heading {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.resource-rack-slots {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  min-height: 0;
+  width: 100%;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 2px;
+}
+.resource-tier {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-right: 1px solid rgba(120, 129, 142, 0.16);
+}
+.resource-tier-empty { border-right-color: transparent; }
+.resource-tier-price {
+  color: #f3ca52;
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.resource-price-spacer {
+  grid-column: 1;
+  grid-row: 1;
+}
+.resource-tier-slots {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1px;
+}
+.resource-slot {
+  width: var(--resource-slot-size);
+  height: var(--resource-slot-size);
+  min-width: 0;
+  border-radius: 2px;
+  background: #0e1014;
+  border: 1px solid #353b45;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.resource-coal .resource-slot.filled { background: #aaaeb4; border-color: #c9ccd0; box-shadow: 0 0 7px rgba(190, 194, 200, 0.28); }
+.resource-oil .resource-slot.filled { background: #4e8fca; border-color: #76addd; box-shadow: 0 0 7px rgba(78, 143, 202, 0.32); }
+.resource-trash .resource-slot.filled { background: #d39b39; border-color: #e8b957; box-shadow: 0 0 7px rgba(211, 155, 57, 0.3); }
+.resource-uranium .resource-slot.filled { background: #72a960; border-color: #94c681; box-shadow: 0 0 7px rgba(114, 169, 96, 0.3); }

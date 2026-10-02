@@ -2,6 +2,7 @@ import { el } from './dom-utils.js';
 import { fetchJson } from './data-source.js';
 import { requestHousePlacement } from './house-api.js';
 import { createMapModel, MAP_DATA_URL, OUTLINE_IMAGE_URL } from './map-model.js';
+import { updatePlayerBoard } from './player-board.js';
 
 const PLAYER_COLORS = ['#e85d5d', '#519cde', '#43a047', '#fb8c00', '#9445aa', '#fdd835'];
 const HOUSE_SPOTS = ['spot_1', 'spot_2', 'spot_3'];
@@ -161,6 +162,7 @@ export async function initMap(gameState) {
           }
           houses[city.name][spot] = updatedState.map_houses[city.name][spot];
           updateSpot(spotGroup, city.name, spot, houses[city.name][spot]);
+          updatePlayerBoard(updatedState);
           placementStatus.textContent = expectedOwner
             ? `Placed ${selectedPlayer}'s house in ${city.name}`
             : `Removed ${selectedPlayer}'s house from ${city.name}`;

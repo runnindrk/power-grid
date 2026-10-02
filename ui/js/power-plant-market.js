@@ -1,0 +1,85 @@
+import { htmlElement } from './dom-utils.js';
+import { fetchJson } from './data-source.js';
+
+const PLANT_DECK_URL = '../../game_info/static_info/power_grid_deck_set_0.json';
+const FUEL_TYPES = [
+  ['coal', '🪨', 'Coal'],
+  ['oil', '🛢️', 'Oil'],
+  ['trash', '🗑️', 'Trash'],
+  ['gas', '🔥', 'Gas'],
+  ['uranium', '☢️', 'Uranium'],
+];
+
+function createFuelDisplay(plant) {
+  const fuels = FUEL_TYPES
+    .filter(([resource]) => plant[resource] > 0)
+    .map(([resource, icon, label]) => ({ resource, icon, label, amount: plant[resource] }));
+  const container = htmlElement('div', { className: 'plant-fuels' });
+
+  if (fuels.length === 0) {
+    container.appendChild(htmlElement('span', { className: 'plant-no-fuel', textContent: 'No fuel' }));
+    return container;
+  }
+
+  const options = htmlElement('div', { className: `fuel-options${plant.hybrid ? ' hybrid' : ''}` });
+  fuels.forEach((fuel, index) => {
+    if (index > 0) {
+      options.appendChild(htmlElement('span', {
+        className: 'fuel-join',
+        textContent: plant.hybrid ? 'or' : '+',
+      }));
+    }
+    const item = htmlElement('span', {
+      className: `fuel-item fuel-${fuel.resource}`,
+      title: fuel.label,
+      'aria-label': `${fuel.amount} ${fuel.label}`,
+    });
+    item.append(
+      htmlElement('span', { className: 'fuel-icon', textContent: fuel.icon }),
+      htmlElement('span', { className: 'fuel-amount', textContent: fuel.amount }),
+    );
+    options.appendChild(item);
+  });
+  container.appendChild(options);
+  return container;
+}
+
+function createPlantCard(plantId, plant) {
+  const card = htmlElement('article', {
+    className: `power-plant-card${plant?.special ? ' special' : ''}`,
+    'data-plant-id': plantId,
+    'aria-label': plant
+      ? `Power plant ${plantId}, powers ${plant.houses} cities`
+      : `Power plant ${plantId}, details unavailable`,
+  });
+  const heading = htmlElement('div', { className: 'plant-heading' });
+  heading.append(
+    htmlElement('span', { className: 'plant-number', textContent: plantId }),
+    htmlElement('span', { className: 'plant-kind', textContent: plant?.special ? 'Special' : 'Plant' }),
+  );
+  card.appendChild(heading);
+
+  if (!plant) {
+    card.appendChild(htmlElement('p', { className: 'plant-unavailable', textContent: 'Details unavailable' }));
+    return card;
+  }
+
+  const output = htmlElement('div', { className: 'plant-output' });
+  output.append(
+    htmlElement('span', { className: 'output-icon', 'aria-hidden': 'true', textContent: '⌂' }),
+    htmlElement('span', { className: 'output-count', textContent: plant.houses }),
+    htmlElement('span', { className: 'output-label', textContent: 'cities' }),
+  );
+  card.append(output, createFuelDisplay(plant));
+  return card;
+}
+
+export async function initPowerPlantMarket(gameState) {
+  const { deck } = await fetchJson(PLANT_DECK_URL);
+  const plantsById = new Map(deck.map((plant) => [plant.cost, plant]));
+  const marketIds = gameState.power_plant_market;
+  const market = document.getElementById('power-plant-market');
+  const grid = market.querySelector('.power-plant-grid');
+
+  grid.replaceChildren(...marketIds.map((plantId) => createPlantCard(plantId, plantsById.get(plantId))));
+}

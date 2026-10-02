@@ -1,0 +1,118 @@
+#power-plant-market {
+  grid-column: 2 / span 4;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  width: calc(var(--card-size) * 4 + var(--card-gap) * 3);
+  height: calc(var(--card-size) * 2 + var(--card-gap));
+}
+.power-plant-grid {
+  width: calc(var(--card-size) * 4 + var(--card-gap) * 3);
+  height: calc(var(--card-size) * 2 + var(--card-gap));
+  display: grid;
+  grid-template-columns: repeat(4, var(--card-size));
+  grid-template-rows: repeat(2, var(--card-size));
+  gap: var(--card-gap);
+}
+.power-plant-card {
+  min-width: 0;
+  width: var(--card-size);
+  height: var(--card-size);
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  background: #22262e;
+  border: 1px solid #454b56;
+  border-radius: 5px;
+}
+.power-plant-card.special {
+  border-color: var(--line-highlight);
+}
+.plant-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #454b56;
+}
+.plant-number {
+  color: var(--text);
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.plant-kind {
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.plant-output {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.output-icon {
+  color: #f3ca52;
+  font-size: 19px;
+  line-height: 1;
+}
+.output-count {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.output-label {
+  color: var(--muted);
+  font-size: 10px;
+}
+.plant-fuels {
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  margin-top: auto;
+}
+.fuel-options {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.fuel-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+}
+.fuel-join {
+  color: var(--muted);
+  font-size: 9px;
+}
+.fuel-coal .fuel-icon { color: #aaa; }
+.fuel-oil .fuel-icon { color: #75aee0; }
+.fuel-trash .fuel-icon { color: #d9b65b; }
+.fuel-gas .fuel-icon { color: #ee8a58; }
+.fuel-uranium .fuel-icon { color: #8bc783; }
+.plant-no-fuel,
+.plant-unavailable {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+@media (max-width: 760px) {
+  .power-plant-card {
+    padding: 6px;
+    gap: 5px;
+  }
+  .plant-number { font-size: 18px; }
+  .output-label {
+    display: none;
+  }
+}
