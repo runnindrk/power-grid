@@ -93,6 +93,15 @@
 #placement-status {
   color: var(--muted);
 }
+#turn-order {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.toolbar-divider {
+  height: 24px;
+  border-left: 1px solid #3a404b;
+}
 @media (max-width: 640px) {
   #map-controls {
     margin-left: 0;

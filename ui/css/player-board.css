@@ -1,16 +1,11 @@
 #player-board {
   --player-tile: var(--card-size);
   --player-row-min-width: calc(var(--player-tile) * 5 + var(--card-gap) * 4);
-  position: absolute;
-  top: 12px;
-  left: 8px;
-  z-index: 4;
-  width: min(var(--dashboard-width), calc(100vw - 16px));
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--card-gap);
-  overflow-x: auto;
-  overflow-y: hidden;
+  flex: 0 0 auto;
 }
 .player-row {
   width: 100%;
@@ -71,11 +66,11 @@
   white-space: nowrap;
 }
 .player-name {
-  font-size: 12px;
+  font-size: 20px;
   font-weight: 750;
 }
 .player-money {
-  font-size: 11px;
+  font-size: 20px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -95,24 +90,70 @@
   font-size: 9px;
 }
 .player-resources {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
 }
 .player-resource {
-  display: flex;
-  align-items: center;
-  gap: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
 }
-.player-resource-icon {
+.player-bid-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #3a404b;
+  border-radius: 4px;
+  background: #12151b;
+}
+.bid-field {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
   font-size: 10px;
 }
-@media (max-width: 760px) {
-  #player-board {
-    top: 8px;
-    left: 8px;
-  }
+.bid-amount {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 2px 5px;
+  border: 1px solid #4a505a;
+  border-radius: 3px;
+  background: #1a1d24;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+}
+.player-bid-panel button {
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid #4a505a;
+  border-radius: 3px;
+  background: #242a33;
+  color: var(--text);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.player-bid-panel .bid-submit {
+  border-color: var(--player-color);
+}
+.player-bid-panel button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bid-status {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

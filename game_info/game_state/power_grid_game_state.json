@@ -31,6 +31,12 @@
         "p3",
         "p4"
     ],
+    "player_aliases": {
+        "p1": "Diogo",
+        "p2": "João",
+        "p3": "Inês",
+        "p4": "Rita"
+    },
     "player_money": {
         "p1": 50,
         "p2": 50,

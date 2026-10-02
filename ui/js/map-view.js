@@ -55,23 +55,27 @@ export async function initMap(gameState) {
   const tooltip = document.getElementById('tooltip');
   const playerSelect = document.getElementById('player-select');
   const placementStatus = document.getElementById('placement-status');
+  const turnOrder = document.getElementById('turn-order');
   const players = gameState.player_turn_order;
+  const playerAliases = gameState.player_aliases || {};
+  const playerLabel = (player) => playerAliases[player] || player;
   const houses = gameState.map_houses;
   let selectedPlayer = players[0];
   let isSavingHouse = false;
 
+  turnOrder.textContent = `Turn order: ${players.map(playerLabel).join(' → ')}`;
   players.forEach((player, index) => {
     const option = document.createElement('option');
     option.value = player;
-    option.textContent = player;
+    option.textContent = playerLabel(player);
     option.style.color = PLAYER_COLORS[index % PLAYER_COLORS.length];
     playerSelect.appendChild(option);
   });
   playerSelect.addEventListener('change', () => {
     selectedPlayer = playerSelect.value;
-    placementStatus.textContent = `Editing houses for ${selectedPlayer}`;
+    placementStatus.textContent = `Editing houses for ${playerLabel(selectedPlayer)}`;
   });
-  placementStatus.textContent = `Editing houses for ${selectedPlayer}`;
+  placementStatus.textContent = `Editing houses for ${playerLabel(selectedPlayer)}`;
 
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('width', width);
@@ -133,7 +137,7 @@ export async function initMap(gameState) {
       const markY = city.y + Math.sin((middleAngle * Math.PI) / 180) * markRadius;
       const spotGroup = el('g', {
         class: 'house-spot', role: 'button', tabindex: 0,
-        'aria-label': `${city.name}, ${spot.replace('_', ' ')}: ${occupiedSpots[spot] || 'empty'}`,
+        'aria-label': `${city.name}, ${spot.replace('_', ' ')}: ${playerLabel(occupiedSpots[spot]) || 'empty'}`,
       });
       const face = el('path', {
         class: 'house-spot-face',
@@ -145,7 +149,7 @@ export async function initMap(gameState) {
         display: occupiedSpots[spot] ? 'inline' : 'none',
       });
       const title = el('title', {});
-      title.textContent = `${city.name} ${spot.replace('_', ' ')}: ${occupiedSpots[spot] || 'empty'}`;
+      title.textContent = `${city.name} ${spot.replace('_', ' ')}: ${playerLabel(occupiedSpots[spot]) || 'empty'}`;
       spotGroup.append(face, mark, title);
 
       const activateSpot = async () => {
@@ -153,7 +157,7 @@ export async function initMap(gameState) {
 
         isSavingHouse = true;
         playerSelect.disabled = true;
-        placementStatus.textContent = 'Saving house placement';
+        placementStatus.textContent = `Saving house placement for ${playerLabel(selectedPlayer)}`;
         try {
           const expectedOwner = occupiedSpots[spot] === selectedPlayer ? null : selectedPlayer;
           const updatedState = await requestHousePlacement(selectedPlayer, city.name, spot);
@@ -164,8 +168,8 @@ export async function initMap(gameState) {
           updateSpot(spotGroup, city.name, spot, houses[city.name][spot]);
           updatePlayerBoard(updatedState);
           placementStatus.textContent = expectedOwner
-            ? `Placed ${selectedPlayer}'s house in ${city.name}`
-            : `Removed ${selectedPlayer}'s house from ${city.name}`;
+            ? `Placed ${playerLabel(selectedPlayer)}'s house in ${city.name}`
+            : `Removed ${playerLabel(selectedPlayer)}'s house from ${city.name}`;
         } catch (error) {
           placementStatus.textContent = error.message;
         } finally {
@@ -202,7 +206,7 @@ export async function initMap(gameState) {
   }
 
   function updateSpot(spotGroup, cityName, spot, owner) {
-    const label = `${cityName}, ${spot.replace('_', ' ')}: ${owner || 'empty'}`;
+    const label = `${cityName}, ${spot.replace('_', ' ')}: ${playerLabel(owner) || 'empty'}`;
     spotGroup.querySelector('.house-spot-face').setAttribute('fill', owner ? playerColor(owner) : '#30343b');
     spotGroup.querySelector('.house-mark').setAttribute('display', owner ? 'inline' : 'none');
     spotGroup.setAttribute('aria-label', label);
@@ -240,5 +244,5 @@ export async function initMap(gameState) {
   }
 
   document.getElementById('stats').textContent =
-    `${cities.length} cities · ${connections.length} connections`;
+    `Germany · ${cities.length} cities · ${connections.length} connections`;
 }
