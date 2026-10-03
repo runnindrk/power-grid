@@ -1,6 +1,6 @@
 import { el } from './dom-utils.js';
 import { fetchJson } from './data-source.js';
-import { requestHousePlacement } from './house-api.js';
+import { requestBuyHouses, requestHousePrice } from './house-api.js';
 import { createMapModel, MAP_DATA_URL, OUTLINE_IMAGE_URL } from './map-model.js';
 import { updatePlayerBoard } from './player-board.js';
 
@@ -53,29 +53,99 @@ export async function initMap(gameState) {
 
   const svg = document.getElementById('map');
   const tooltip = document.getElementById('tooltip');
-  const playerSelect = document.getElementById('player-select');
   const placementStatus = document.getElementById('placement-status');
+  const playerBoard = document.getElementById('player-board');
   const turnOrder = document.getElementById('turn-order');
   const players = gameState.player_turn_order;
   const playerAliases = gameState.player_aliases || {};
   const playerLabel = (player) => playerAliases[player] || player;
   const houses = gameState.map_houses;
-  let selectedPlayer = players[0];
-  let isSavingHouse = false;
+  const currentPlayer = gameState.current_player || players[0];
+  const currentAction = String(gameState.current_action || 'building_houses').replaceAll('_', ' ');
+  let isBuyingHouses = false;
+  let quoteRequestId = 0;
+  let quotedPrice = null;
+  const pendingHouses = [];
 
-  turnOrder.textContent = `Turn order: ${players.map(playerLabel).join(' → ')}`;
+  function setPlayerPurchaseState(player, message, disabled) {
+    const row = playerBoard.querySelector(`.player-row[data-player-id="${player}"]`);
+    if (!row) return;
+    row.querySelector('.player-house-purchase-total').textContent = message;
+    row.querySelector('.player-buy-houses-button').disabled = disabled;
+  }
+
+  function clearHouseSelection(message = 'Select house spots') {
+    pendingHouses.forEach(({ spotGroup }) => {
+      spotGroup.classList.remove('selected');
+      spotGroup.setAttribute('aria-pressed', 'false');
+    });
+    pendingHouses.length = 0;
+    quoteRequestId += 1;
+    quotedPrice = null;
+    setPlayerPurchaseState(currentPlayer, message, true);
+  }
+
+  async function updateHouseQuote() {
+    const requestId = ++quoteRequestId;
+    quotedPrice = null;
+    if (pendingHouses.length === 0) {
+      setPlayerPurchaseState(currentPlayer, 'Select house spots', true);
+      return;
+    }
+
+    setPlayerPurchaseState(currentPlayer, 'Calculating...', true);
+    const placements = pendingHouses.map(({ city, spot }) => ({ city, spot }));
+    try {
+      const result = await requestHousePrice(currentPlayer, placements);
+      if (requestId !== quoteRequestId) return;
+      if (result.error_code !== 0) throw new Error('House price request failed');
+      quotedPrice = result.price;
+      setPlayerPurchaseState(currentPlayer, `Total $${result.price}`, false);
+    } catch (error) {
+      if (requestId !== quoteRequestId) return;
+      setPlayerPurchaseState(currentPlayer, error.message, true);
+    }
+  }
+
+  playerBoard.addEventListener('click', async (event) => {
+    const buyButton = event.target.closest('.player-buy-houses-button');
+    if (!buyButton || isBuyingHouses || pendingHouses.length === 0) return;
+    const buyer = buyButton.closest('.player-house-purchase-controls').dataset.playerId;
+    if (buyer !== currentPlayer || quotedPrice === null) return;
+    isBuyingHouses = true;
+    setPlayerPurchaseState(currentPlayer, 'Buying houses...', true);
+    const placements = pendingHouses.map(({ city, spot }) => ({ city, spot }));
+    try {
+      const result = await requestBuyHouses(buyer, placements);
+      if (result.error_code !== 0) throw new Error('House purchase failed');
+      pendingHouses.forEach(({ city, spot, spotGroup }) => {
+        houses[city][spot] = buyer;
+        updateSpot(spotGroup, city, spot, buyer);
+      });
+      gameState.player_money[buyer] -= result.price;
+      updatePlayerBoard(gameState);
+      const houseCount = pendingHouses.length;
+      clearHouseSelection(`Bought ${houseCount} ${houseCount === 1 ? 'house' : 'houses'} for $${result.price}`);
+      placementStatus.textContent = `Houses placed for ${playerLabel(buyer)}`;
+    } catch (error) {
+      setPlayerPurchaseState(currentPlayer, error.message, quotedPrice === null);
+    } finally {
+      isBuyingHouses = false;
+    }
+  });
+
+  turnOrder.replaceChildren(document.createTextNode('Turn order: '));
   players.forEach((player, index) => {
-    const option = document.createElement('option');
-    option.value = player;
-    option.textContent = playerLabel(player);
-    option.style.color = PLAYER_COLORS[index % PLAYER_COLORS.length];
-    playerSelect.appendChild(option);
+    if (index > 0) turnOrder.appendChild(document.createTextNode(' → '));
+    const playerTurn = document.createElement('span');
+    const isCurrentPlayer = player === currentPlayer;
+    playerTurn.className = `turn-order-player${isCurrentPlayer ? ' current' : ''}`;
+    playerTurn.textContent = playerLabel(player);
+    playerTurn.style.color = PLAYER_COLORS[index % PLAYER_COLORS.length];
+    if (isCurrentPlayer) playerTurn.setAttribute('aria-current', 'true');
+    turnOrder.appendChild(playerTurn);
   });
-  playerSelect.addEventListener('change', () => {
-    selectedPlayer = playerSelect.value;
-    placementStatus.textContent = `Editing houses for ${playerLabel(selectedPlayer)}`;
-  });
-  placementStatus.textContent = `Editing houses for ${playerLabel(selectedPlayer)}`;
+  placementStatus.textContent = `${currentAction} · ${playerLabel(currentPlayer)}`;
 
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('width', width);
@@ -136,8 +206,11 @@ export async function initMap(gameState) {
       const markX = city.x + Math.cos((middleAngle * Math.PI) / 180) * markRadius;
       const markY = city.y + Math.sin((middleAngle * Math.PI) / 180) * markRadius;
       const spotGroup = el('g', {
-        class: 'house-spot', role: 'button', tabindex: 0,
+        class: `house-spot${occupiedSpots[spot] ? ' occupied' : ''}`,
+        role: 'button', tabindex: 0,
         'aria-label': `${city.name}, ${spot.replace('_', ' ')}: ${playerLabel(occupiedSpots[spot]) || 'empty'}`,
+        'aria-disabled': String(Boolean(occupiedSpots[spot])),
+        'aria-pressed': 'false',
       });
       const face = el('path', {
         class: 'house-spot-face',
@@ -152,36 +225,24 @@ export async function initMap(gameState) {
       title.textContent = `${city.name} ${spot.replace('_', ' ')}: ${playerLabel(occupiedSpots[spot]) || 'empty'}`;
       spotGroup.append(face, mark, title);
 
-      const activateSpot = async () => {
-        if (isSavingHouse) return;
-
-        isSavingHouse = true;
-        playerSelect.disabled = true;
-        placementStatus.textContent = `Saving house placement for ${playerLabel(selectedPlayer)}`;
-        try {
-          const expectedOwner = occupiedSpots[spot] === selectedPlayer ? null : selectedPlayer;
-          const updatedState = await requestHousePlacement(selectedPlayer, city.name, spot);
-          if (updatedState.map_houses?.[city.name]?.[spot] !== expectedOwner) {
-            throw new Error('Server response did not confirm the house placement');
-          }
-          houses[city.name][spot] = updatedState.map_houses[city.name][spot];
-          updateSpot(spotGroup, city.name, spot, houses[city.name][spot]);
-          updatePlayerBoard(updatedState);
-          placementStatus.textContent = expectedOwner
-            ? `Placed ${playerLabel(selectedPlayer)}'s house in ${city.name}`
-            : `Removed ${playerLabel(selectedPlayer)}'s house from ${city.name}`;
-        } catch (error) {
-          placementStatus.textContent = error.message;
-        } finally {
-          isSavingHouse = false;
-          playerSelect.disabled = false;
+      const toggleHouseSelection = () => {
+        if (isBuyingHouses || occupiedSpots[spot]) return;
+        const existingIndex = pendingHouses.findIndex((house) => house.city === city.name && house.spot === spot);
+        if (existingIndex >= 0) {
+          pendingHouses.splice(existingIndex, 1);
+        } else {
+          pendingHouses.push({ city: city.name, spot, spotGroup });
         }
+        const isSelected = existingIndex < 0;
+        spotGroup.classList.toggle('selected', isSelected);
+        spotGroup.setAttribute('aria-pressed', String(isSelected));
+        updateHouseQuote();
       };
-      spotGroup.addEventListener('click', activateSpot);
+      spotGroup.addEventListener('click', toggleHouseSelection);
       spotGroup.addEventListener('keydown', (evt) => {
         if (evt.key === 'Enter' || evt.key === ' ') {
           evt.preventDefault();
-          activateSpot();
+          toggleHouseSelection();
         }
       });
       cityGroup.appendChild(spotGroup);
@@ -207,6 +268,10 @@ export async function initMap(gameState) {
 
   function updateSpot(spotGroup, cityName, spot, owner) {
     const label = `${cityName}, ${spot.replace('_', ' ')}: ${playerLabel(owner) || 'empty'}`;
+    spotGroup.classList.toggle('occupied', Boolean(owner));
+    spotGroup.classList.remove('selected');
+    spotGroup.setAttribute('aria-disabled', String(Boolean(owner)));
+    spotGroup.setAttribute('aria-pressed', 'false');
     spotGroup.querySelector('.house-spot-face').setAttribute('fill', owner ? playerColor(owner) : '#30343b');
     spotGroup.querySelector('.house-mark').setAttribute('display', owner ? 'inline' : 'none');
     spotGroup.setAttribute('aria-label', label);

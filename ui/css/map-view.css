@@ -32,6 +32,11 @@
   stroke-width: 1.5;
   transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s, filter 0.15s;
 }
+.house-spot.selected .house-spot-face {
+  stroke: #ffd54f;
+  stroke-width: 3;
+  filter: brightness(1.25);
+}
 .house-spot:hover:not(:focus) .house-spot-face,
 .house-spot:focus-visible .house-spot-face {
   stroke: #fff;
@@ -82,16 +87,43 @@
   gap: 8px;
   font-size: 12px;
 }
-#player-select {
-  border: 1px solid #4a505a;
-  border-radius: 4px;
-  padding: 5px 8px;
-  background: #12151b;
-  color: var(--text);
-  font: inherit;
-}
 #placement-status {
   color: var(--muted);
+}
+.player-house-purchase-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: 4px;
+}
+.player-house-purchase-total {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-buy-houses-button,
+.player-power-button {
+  flex: 0 0 auto;
+  padding: 3px 5px;
+  border: 1px solid #ffd54f;
+  border-radius: 4px;
+  background: #242a33;
+  color: var(--text);
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+.player-power-button {
+  width: 100%;
+}
+.player-buy-houses-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 #turn-order {
   color: var(--muted);
@@ -101,6 +133,12 @@
 .toolbar-divider {
   height: 24px;
   border-left: 1px solid #3a404b;
+}
+.turn-order-player.current {
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #ffd54f;
+  text-underline-offset: 4px;
 }
 @media (max-width: 640px) {
   #map-controls {

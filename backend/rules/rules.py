@@ -28,6 +28,9 @@ class GameState(TypedDict):
     power_plant_market: list[int]
     resource_market: ResourceStock
     player_turn_order: list[str]
+    current_player: str
+    current_action: str
+    player_aliases: dict[str, str]
     player_money: dict[str, int]
     player_power_plants: dict[str, list[int]]
     player_resources: dict[str, ResourceStock]
@@ -45,14 +48,14 @@ def auction_power_plant(plant_id: int, players: list[str], bids: dict[str, int])
     return highest_bidder
 
 # Phase 3: Resource Buying
-def buy_resources(player: str, resources: ResourceStock, market: ResourceStock) -> bool:
-    return False
+def buy_resources(player: str, resources: ResourceStock) -> tuple[int, ErrorCode]:
+    return 0, ErrorCode.E_OK
 
 # Phase 4: Building Houses
-def build_house(player: str, city: str, map_houses: dict[str, dict]) -> ErrorCode:
-    return ErrorCode.E_OK
+def build_houses(player: str, placements: list[dict[str, str]]) -> tuple[int, ErrorCode]:
+    return 0, ErrorCode.E_OK
 
 # Phase 5: Bureaucracy
 def bureaucracy(state: GameState) -> None:
-    for player in state.player_turn_order:
+    for player in state["player_turn_order"]:
         pass  # Placeholder for bureaucracy logic

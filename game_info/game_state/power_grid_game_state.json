@@ -22,7 +22,7 @@
     "resource_market": {
         "coal": 24,
         "oil": 18,
-        "trash": 6,
+        "trash": 9,
         "uranium": 2
     },
     "player_turn_order": [
@@ -31,6 +31,8 @@
         "p3",
         "p4"
     ],
+    "current_player": "p1",
+    "current_action": "building_houses",
     "player_aliases": {
         "p1": "Diogo",
         "p2": "João",
@@ -44,7 +46,7 @@
         "p4": 50
     },
     "player_power_plants": {
-        "p1": [],
+        "p1": [5],
         "p2": [],
         "p3": [],
         "p4": []
