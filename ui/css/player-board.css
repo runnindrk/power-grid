@@ -33,10 +33,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.player-plant-slot:not(.empty) {
-  border-color: var(--player-color);
-  background: #22262e;
-}
 .player-plant-slot.empty {
   border-style: dashed;
   background: rgba(26, 29, 36, 0.88);

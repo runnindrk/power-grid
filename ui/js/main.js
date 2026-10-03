@@ -14,12 +14,12 @@ async function initCards(gameState) {
 
 async function init() {
   const gameState = await fetchGameState();
-  await Promise.all([
+  const [, , plantsById] = await Promise.all([
     initMap(gameState),
     initCards(gameState),
     initPowerPlantMarket(gameState),
-    initPlayerBoard(gameState),
   ]);
+  initPlayerBoard(gameState, plantsById);
   initResourceMarket(gameState);
 }
 

@@ -1,5 +1,6 @@
 import { htmlElement } from './dom-utils.js';
 import { requestBureaucracy } from './bureaucracy-api.js';
+import { createPlantCard } from './power-plant-market.js';
 import { requestBuyResources, requestResourcePrice } from './resources-api.js';
 
 const PLAYER_COLORS = ['#e85d5d', '#519cde', '#43a047', '#fb8c00', '#9445aa', '#fdd835'];
@@ -16,17 +17,19 @@ function countNetworkHouses(mapHouses, player) {
   ), 0);
 }
 
-function createPlantSlot(playerAlias, plantId, slotIndex) {
-  const isEmpty = plantId === undefined || plantId === null;
+function createPlantSlot(playerAlias, ownedPlant, slotIndex, plantsById) {
+  if (ownedPlant) {
+    const plantId = ownedPlant.plant_id;
+    return createPlantCard(plantId, plantsById.get(plantId), true, ownedPlant.resources);
+  }
+
   const slot = htmlElement('div', {
-    className: `player-plant-slot${isEmpty ? ' empty' : ''}`,
-    'aria-label': isEmpty
-      ? `Empty power plant slot ${slotIndex + 1} for ${playerAlias}`
-      : `Power plant ${plantId} owned by ${playerAlias}`,
+    className: 'player-plant-slot empty',
+    'aria-label': `Empty power plant slot ${slotIndex + 1} for ${playerAlias}`,
   });
   slot.appendChild(htmlElement('span', {
-    className: isEmpty ? 'empty-slot-label' : 'player-plant-number',
-    textContent: isEmpty ? 'Empty' : plantId,
+    className: 'empty-slot-label',
+    textContent: 'Empty',
   }));
   return slot;
 }
@@ -175,7 +178,7 @@ function createPowerButton(gameState) {
   return button;
 }
 
-function createPlayerRow(player, index, gameState) {
+function createPlayerRow(player, index, gameState, plantsById) {
   const playerAlias = gameState.player_aliases?.[player] ?? player;
   const row = htmlElement('article', {
     className: 'player-row',
@@ -230,14 +233,14 @@ function createPlayerRow(player, index, gameState) {
   row.appendChild(info);
 
   for (let slot = 0; slot < 3; slot += 1) {
-    row.appendChild(createPlantSlot(playerAlias, plants[slot], slot));
+    row.appendChild(createPlantSlot(playerAlias, plants[slot], slot, plantsById));
   }
   return row;
 }
 
-export function updatePlayerBoard(gameState) {
+export function updatePlayerBoard(gameState, plantsById) {
   const players = gameState.player_turn_order.slice(0, 6);
-  const rows = players.map((player, index) => createPlayerRow(player, index, gameState));
+  const rows = players.map((player, index) => createPlayerRow(player, index, gameState, plantsById));
   document.getElementById('player-board').replaceChildren(...rows);
 }
 

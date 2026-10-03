@@ -31,6 +31,9 @@
 .power-plant-card.special {
   border-color: var(--line-highlight);
 }
+.player-owned-plant {
+  border-color: var(--player-color);
+}
 .plant-heading {
   display: flex;
   align-items: baseline;
@@ -77,6 +80,42 @@
   min-height: 22px;
   margin-top: auto;
 }
+.plant-fuel-storage {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-top: auto;
+}
+.plant-fuel-storage .plant-fuels {
+  min-width: 0;
+  margin-top: 0;
+}
+.plant-storage {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.plant-storage-slot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border: 1px solid #6c7380;
+  border-radius: 2px;
+  background: #171a20;
+}
+.plant-storage-slot.filled {
+  background: #6c7380;
+}
+.plant-storage-slot.fuel-coal { background: #aaa; }
+.plant-storage-slot.fuel-oil { background: #75aee0; }
+.plant-storage-slot.fuel-trash { background: #d9b65b; }
+.plant-storage-slot.fuel-gas { background: #ee8a58; }
+.plant-storage-slot.fuel-uranium { background: #8bc783; }
 .fuel-options {
   display: flex;
   align-items: center;

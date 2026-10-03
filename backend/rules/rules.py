@@ -19,6 +19,11 @@ class ResourceStock(TypedDict, total=False):
     uranium: int
 
 
+class PlayerPowerPlant(TypedDict):
+    plant_id: int
+    resources: ResourceStock
+
+
 class GameState(TypedDict):
     number_of_players: int
     regions_chosen: list[str]
@@ -32,8 +37,7 @@ class GameState(TypedDict):
     current_action: str
     player_aliases: dict[str, str]
     player_money: dict[str, int]
-    player_power_plants: dict[str, list[int]]
-    player_resources: dict[str, ResourceStock]
+    player_power_plants: dict[str, list[PlayerPowerPlant]]
     map_houses: dict[str, dict]
 
 

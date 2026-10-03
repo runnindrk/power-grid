@@ -46,36 +46,31 @@
         "p4": 50
     },
     "player_power_plants": {
-        "p1": [5],
+        "p1": [
+            {
+                "plant_id": 5,
+                "resources": {
+                    "coal": 2,
+                    "oil": 1,
+                    "trash": 0,
+                    "gas": 0,
+                    "uranium": 0
+                }
+            },
+            {
+                "plant_id": 8,
+                "resources": {
+                    "coal": 4,
+                    "oil": 0,
+                    "trash": 0,
+                    "gas": 0,
+                    "uranium": 0
+                }
+            }
+        ],
         "p2": [],
         "p3": [],
         "p4": []
-    },
-    "player_resources": {
-        "p1": {
-            "coal": 0,
-            "oil": 0,
-            "trash": 0,
-            "uranium": 0
-        },
-        "p2": {
-            "coal": 0,
-            "oil": 0,
-            "trash": 0,
-            "uranium": 0
-        },
-        "p3": {
-            "coal": 0,
-            "oil": 0,
-            "trash": 0,
-            "uranium": 0
-        },
-        "p4": {
-            "coal": 0,
-            "oil": 0,
-            "trash": 0,
-            "uranium": 0
-        }
     },
     "map_houses": {
         "Flensburg": {
