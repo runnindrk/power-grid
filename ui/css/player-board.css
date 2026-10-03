@@ -93,6 +93,41 @@
   color: var(--muted);
   font-size: 9px;
 }
+.player-house-purchase-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+  gap: 4px;
+}
+.player-house-purchase-total {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-buy-houses-button,
+.player-power-button {
+  flex: 0 0 auto;
+  padding: 3px 5px;
+  border: 1px solid #ffd54f;
+  border-radius: 4px;
+  background: #242a33;
+  color: var(--text);
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+.player-power-button {
+  width: 100%;
+}
+.player-buy-houses-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .player-resource-buy-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 54px;

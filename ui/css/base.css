@@ -16,24 +16,6 @@ body {
   flex-direction: column;
   height: 100vh;
 }
-header {
-  padding: 10px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid #2a2e37;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-header h1 {
-  font-size: 16px;
-  margin: 0;
-  font-weight: 600;
-}
-#stats {
-  font-size: 12px;
-  color: var(--muted);
-}
 main {
   flex: 1;
   overflow: auto;

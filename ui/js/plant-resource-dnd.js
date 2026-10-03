@@ -1,4 +1,4 @@
-import { requestPlantResourceMove } from './plant-resource-api.js';
+import { requestPlantResourceMove } from './game-api.js';
 
 const STORAGE_SLOT_SELECTOR = '.plant-storage-slot';
 

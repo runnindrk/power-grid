@@ -1,0 +1,66 @@
+header {
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid #2a2e37;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+header h1 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 600;
+}
+#stats {
+  font-size: 12px;
+  color: var(--muted);
+}
+#turn-order {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.turn-order-player.current {
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: #ffd54f;
+  text-underline-offset: 4px;
+}
+.toolbar-divider {
+  height: 24px;
+  border-left: 1px solid #3a404b;
+}
+#map-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+#placement-status {
+  color: var(--muted);
+}
+#api-status {
+  max-width: 360px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#api-status[data-state="ok"] {
+  color: #8bc783;
+}
+#api-status[data-state="error"] {
+  color: #e85d5d;
+}
+#api-status[data-state="pending"] {
+  color: #f3ca52;
+}
+@media (max-width: 640px) {
+  #map-controls {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}

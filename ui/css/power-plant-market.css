@@ -14,6 +14,11 @@
   gap: var(--card-gap);
 }
 .power-plant-card {
+  --fuel-coal: #aaa;
+  --fuel-oil: #75aee0;
+  --fuel-trash: #d9b65b;
+  --fuel-gas: #ee8a58;
+  --fuel-uranium: #8bc783;
   min-width: 0;
   width: var(--card-size);
   height: var(--card-size);
@@ -110,13 +115,13 @@
 }
 .plant-storage-slot.filled {
   background: #6c7380;
+  cursor: grab;
 }
-.plant-storage-slot.fuel-coal { background: #aaa; }
-.plant-storage-slot.fuel-oil { background: #75aee0; }
-.plant-storage-slot.fuel-trash { background: #d9b65b; }
-.plant-storage-slot.fuel-gas { background: #ee8a58; }
-.plant-storage-slot.fuel-uranium { background: #8bc783; }
-.plant-storage-slot.filled { cursor: grab; }
+.plant-storage-slot.fuel-coal { background: var(--fuel-coal); }
+.plant-storage-slot.fuel-oil { background: var(--fuel-oil); }
+.plant-storage-slot.fuel-trash { background: var(--fuel-trash); }
+.plant-storage-slot.fuel-gas { background: var(--fuel-gas); }
+.plant-storage-slot.fuel-uranium { background: var(--fuel-uranium); }
 .plant-storage-slot.dragging { opacity: 0.4; }
 .plant-storage-slot.drop-target {
   outline: 2px solid var(--line-highlight);
@@ -140,11 +145,11 @@
   color: var(--muted);
   font-size: 9px;
 }
-.fuel-coal .fuel-icon { color: #aaa; }
-.fuel-oil .fuel-icon { color: #75aee0; }
-.fuel-trash .fuel-icon { color: #d9b65b; }
-.fuel-gas .fuel-icon { color: #ee8a58; }
-.fuel-uranium .fuel-icon { color: #8bc783; }
+.fuel-coal .fuel-icon { color: var(--fuel-coal); }
+.fuel-oil .fuel-icon { color: var(--fuel-oil); }
+.fuel-trash .fuel-icon { color: var(--fuel-trash); }
+.fuel-gas .fuel-icon { color: var(--fuel-gas); }
+.fuel-uranium .fuel-icon { color: var(--fuel-uranium); }
 .plant-no-fuel,
 .plant-unavailable {
   margin: 0;

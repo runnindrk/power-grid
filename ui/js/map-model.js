@@ -1,6 +1,4 @@
-export const MAP_DATA_URL = '../../game_info/maps/germany/power_grid_germany_map.json';
-export const OUTLINE_IMAGE_URL = '../../game_info/maps/germany/germany_outline.jpg';
-export const MAP_SCALE = 1.25;
+const MAP_SCALE = 1.25;
 
 export function createMapModel(data) {
   const [width, height] = data.map_size[0].map((dimension) => dimension * MAP_SCALE);

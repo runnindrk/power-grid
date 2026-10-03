@@ -1,19 +1,26 @@
 import { htmlElement } from './dom-utils.js';
-import { fetchJson } from './data-source.js';
+import { fetchPlantDeck } from './data-source.js';
+import { RESOURCE_ICONS } from './resource-icons.js';
 
-const PLANT_DECK_URL = '../../game_info/static_info/power_grid_deck_set_0.json';
-const FUEL_TYPES = [
-  ['coal', '🪨', 'Coal'],
-  ['oil', '🛢️', 'Oil'],
-  ['trash', '🗑️', 'Trash'],
-  ['gas', '🔥', 'Gas'],
-  ['uranium', '☢️', 'Uranium'],
-];
+const FUEL_LABELS = { coal: 'Coal', oil: 'Oil', trash: 'Trash', gas: 'Gas', uranium: 'Uranium' };
+const FUEL_TYPES = Object.keys(FUEL_LABELS);
+
+function requiredFuels(plant) {
+  return FUEL_TYPES
+    .filter((resource) => plant[resource] > 0)
+    .map((resource) => ({ resource, label: FUEL_LABELS[resource], amount: plant[resource] }));
+}
+
+// A plant stores up to twice the fuel it burns per round.
+function storageCapacity(plant) {
+  const amounts = requiredFuels(plant).map(({ amount }) => amount);
+  if (amounts.length === 0) return 0;
+  const fuelAmount = plant.hybrid ? Math.max(...amounts) : amounts.reduce((total, amount) => total + amount, 0);
+  return fuelAmount * 2;
+}
 
 function createFuelDisplay(plant) {
-  const fuels = FUEL_TYPES
-    .filter(([resource]) => plant[resource] > 0)
-    .map(([resource, icon, label]) => ({ resource, icon, label, amount: plant[resource] }));
+  const fuels = requiredFuels(plant);
   const container = htmlElement('div', { className: 'plant-fuels' });
 
   if (fuels.length === 0) {
@@ -22,7 +29,7 @@ function createFuelDisplay(plant) {
   }
 
   const options = htmlElement('div', { className: `fuel-options${plant.hybrid ? ' hybrid' : ''}` });
-  fuels.forEach((fuel, index) => {
+  fuels.forEach(({ resource, label, amount }, index) => {
     if (index > 0) {
       options.appendChild(htmlElement('span', {
         className: 'fuel-join',
@@ -30,13 +37,13 @@ function createFuelDisplay(plant) {
       }));
     }
     const item = htmlElement('span', {
-      className: `fuel-item fuel-${fuel.resource}`,
-      title: fuel.label,
-      'aria-label': `${fuel.amount} ${fuel.label}`,
+      className: `fuel-item fuel-${resource}`,
+      title: label,
+      'aria-label': `${amount} ${label}`,
     });
     item.append(
-      htmlElement('span', { className: 'fuel-icon', textContent: fuel.icon }),
-      htmlElement('span', { className: 'fuel-amount', textContent: fuel.amount }),
+      htmlElement('span', { className: 'fuel-icon', textContent: RESOURCE_ICONS[resource] }),
+      htmlElement('span', { className: 'fuel-amount', textContent: amount }),
     );
     options.appendChild(item);
   });
@@ -44,21 +51,12 @@ function createFuelDisplay(plant) {
   return container;
 }
 
-function createPlantStorage(plant, resources = {}, playerId, plantId) {
-  const fuelAmounts = FUEL_TYPES
-    .map(([resource]) => plant[resource] ?? 0)
-    .filter((amount) => amount > 0);
-  const fuelAmount = plant.hybrid
-    ? Math.max(...fuelAmounts)
-    : fuelAmounts.reduce((total, amount) => total + amount, 0);
-  const capacity = fuelAmount * 2;
+function createPlantStorage(plant, { playerId, resources = {} }, plantId) {
+  const capacity = storageCapacity(plant);
   if (capacity === 0) return null;
 
   const storedResources = Object.entries(resources)
-    .flatMap(([resource, amount]) => Array.from(
-      { length: Math.max(0, Math.floor(amount)) },
-      () => resource,
-    ))
+    .flatMap(([resource, amount]) => Array(Math.max(0, Math.floor(amount))).fill(resource))
     .slice(0, capacity);
   const storage = htmlElement('div', {
     className: 'plant-storage',
@@ -67,24 +65,24 @@ function createPlantStorage(plant, resources = {}, playerId, plantId) {
 
   for (let slot = 0; slot < capacity; slot += 1) {
     const resource = storedResources[slot];
-    const fuel = FUEL_TYPES.find(([fuelType]) => fuelType === resource);
+    const description = resource ? `${FUEL_LABELS[resource] ?? resource} stored` : 'Empty storage space';
     storage.appendChild(htmlElement('span', {
       className: `plant-storage-slot${resource ? ` filled fuel-${resource}` : ''}`,
       draggable: resource ? 'true' : 'false',
       'data-player-id': playerId,
       'data-plant-id': plantId,
       'data-slot-index': slot,
-      title: resource ? `${fuel?.[2] ?? resource} stored` : 'Empty storage space',
-      'aria-label': resource ? `${fuel?.[2] ?? resource} stored` : 'Empty storage space',
+      title: description,
+      'aria-label': description,
     }));
   }
-
   return storage;
 }
 
-export function createPlantCard(plantId, plant, playerOwned = false, resources = {}, playerId) {
+// `owner` ({ playerId, resources }) is set only for plants on a player board, which show their storage.
+export function createPlantCard(plantId, plant, owner = null) {
   const card = htmlElement('article', {
-    className: `power-plant-card${plant?.special ? ' special' : ''}${playerOwned ? ' player-owned-plant' : ''}`,
+    className: `power-plant-card${plant?.special ? ' special' : ''}${owner ? ' player-owned-plant' : ''}`,
     'data-plant-id': plantId,
     'aria-label': plant
       ? `Power plant ${plantId}, powers ${plant.houses} cities`
@@ -109,15 +107,12 @@ export function createPlantCard(plantId, plant, playerOwned = false, resources =
     htmlElement('span', { className: 'output-label', textContent: 'cities' }),
   );
   card.appendChild(output);
-  if (playerOwned) {
-    const storage = createPlantStorage(plant, resources, playerId, plantId);
-    if (storage) {
-      const fuelStorage = htmlElement('div', { className: 'plant-fuel-storage' });
-      fuelStorage.append(createFuelDisplay(plant), storage);
-      card.appendChild(fuelStorage);
-    } else {
-      card.appendChild(createFuelDisplay(plant));
-    }
+
+  const storage = owner && createPlantStorage(plant, owner, plantId);
+  if (storage) {
+    const fuelStorage = htmlElement('div', { className: 'plant-fuel-storage' });
+    fuelStorage.append(createFuelDisplay(plant), storage);
+    card.appendChild(fuelStorage);
   } else {
     card.appendChild(createFuelDisplay(plant));
   }
@@ -125,12 +120,10 @@ export function createPlantCard(plantId, plant, playerOwned = false, resources =
 }
 
 export async function initPowerPlantMarket(gameState) {
-  const { deck } = await fetchJson(PLANT_DECK_URL);
+  const { deck } = await fetchPlantDeck();
   const plantsById = new Map(deck.map((plant) => [plant.cost, plant]));
-  const marketIds = gameState.power_plant_market;
-  const market = document.getElementById('power-plant-market');
-  const grid = market.querySelector('.power-plant-grid');
+  const grid = document.querySelector('#power-plant-market .power-plant-grid');
 
-  grid.replaceChildren(...marketIds.map((plantId) => createPlantCard(plantId, plantsById.get(plantId))));
+  grid.replaceChildren(...gameState.power_plant_market.map((plantId) => createPlantCard(plantId, plantsById.get(plantId))));
   return plantsById;
 }

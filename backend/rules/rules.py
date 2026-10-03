@@ -8,10 +8,6 @@ class ErrorCode(IntEnum):
     E_NOT_OKAY = 1
 
 
-class MapMatrix(TypedDict):
-    matrix: list[list[int]]
-
-
 class ResourceStock(TypedDict, total=False):
     coal: int
     oil: int
@@ -61,5 +57,4 @@ def build_houses(player: str, placements: list[dict[str, str]]) -> tuple[int, Er
 
 # Phase 5: Bureaucracy
 def bureaucracy(state: GameState) -> None:
-    for player in state["player_turn_order"]:
-        pass  # Placeholder for bureaucracy logic
+    pass

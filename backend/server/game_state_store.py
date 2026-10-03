@@ -3,8 +3,8 @@ from pathlib import Path
 from threading import RLock
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-GAME_STATE_PATH = PROJECT_ROOT / "game_info" / "game_state" / "power_grid_game_state.json"
+from backend.server.paths import GAME_STATE_PATH
+
 GAME_STATE_LOCK = RLock()
 
 

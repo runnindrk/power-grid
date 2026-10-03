@@ -1,26 +1,22 @@
-import { fetchJson } from './data-source.js';
+import { fetchMoneyData } from './data-source.js';
 import { htmlElement } from './dom-utils.js';
 
-const MONEY_DATA_URL = '../../game_info/static_info/power_grid_money.json';
-
 function renderMoneyCard(moneyData) {
-  const entries = Object.entries(moneyData.money[0]);
-
-  const card = htmlElement('div', { className: 'info-card money-card' });
   const grid = htmlElement('div', { className: 'money-grid' });
-  entries.forEach(([key, value]) => {
-    const houses = parseInt(key, 10);
+  Object.entries(moneyData.money[0]).forEach(([houses, value]) => {
     const pair = htmlElement('div', { className: 'money-pair' });
     pair.append(
-      htmlElement('span', { className: 'houses', textContent: houses }),
+      htmlElement('span', { className: 'houses', textContent: parseInt(houses, 10) }),
       htmlElement('span', { className: 'value', textContent: value }),
     );
     grid.appendChild(pair);
   });
+
+  const card = htmlElement('div', { className: 'info-card money-card' });
   card.appendChild(grid);
   return card;
 }
 
 export async function initMoneyCard(container) {
-  container.appendChild(renderMoneyCard(await fetchJson(MONEY_DATA_URL)));
+  container.appendChild(renderMoneyCard(await fetchMoneyData()));
 }
