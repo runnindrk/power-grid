@@ -1,5 +1,6 @@
 import { htmlElement } from './dom-utils.js';
 import { requestBureaucracy } from './bureaucracy-api.js';
+import { initPlantResourceDragAndDrop } from './plant-resource-dnd.js';
 import { createPlantCard } from './power-plant-market.js';
 import { requestBuyResources, requestResourcePrice } from './resources-api.js';
 
@@ -17,10 +18,10 @@ function countNetworkHouses(mapHouses, player) {
   ), 0);
 }
 
-function createPlantSlot(playerAlias, ownedPlant, slotIndex, plantsById) {
+function createPlantSlot(player, playerAlias, ownedPlant, slotIndex, plantsById) {
   if (ownedPlant) {
     const plantId = ownedPlant.plant_id;
-    return createPlantCard(plantId, plantsById.get(plantId), true, ownedPlant.resources);
+    return createPlantCard(plantId, plantsById.get(plantId), true, ownedPlant.resources, player);
   }
 
   const slot = htmlElement('div', {
@@ -233,7 +234,7 @@ function createPlayerRow(player, index, gameState, plantsById) {
   row.appendChild(info);
 
   for (let slot = 0; slot < 3; slot += 1) {
-    row.appendChild(createPlantSlot(playerAlias, plants[slot], slot, plantsById));
+    row.appendChild(createPlantSlot(player, playerAlias, plants[slot], slot, plantsById));
   }
   return row;
 }
@@ -244,4 +245,10 @@ export function updatePlayerBoard(gameState, plantsById) {
   document.getElementById('player-board').replaceChildren(...rows);
 }
 
-export const initPlayerBoard = updatePlayerBoard;
+export function initPlayerBoard(gameState, plantsById) {
+  const board = document.getElementById('player-board');
+  updatePlayerBoard(gameState, plantsById);
+  initPlantResourceDragAndDrop(board, (updatedState) => {
+    updatePlayerBoard(updatedState, plantsById);
+  });
+}

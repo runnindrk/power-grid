@@ -116,6 +116,12 @@
 .plant-storage-slot.fuel-trash { background: #d9b65b; }
 .plant-storage-slot.fuel-gas { background: #ee8a58; }
 .plant-storage-slot.fuel-uranium { background: #8bc783; }
+.plant-storage-slot.filled { cursor: grab; }
+.plant-storage-slot.dragging { opacity: 0.4; }
+.plant-storage-slot.drop-target {
+  outline: 2px solid var(--line-highlight);
+  outline-offset: 1px;
+}
 .fuel-options {
   display: flex;
   align-items: center;

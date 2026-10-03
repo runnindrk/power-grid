@@ -44,7 +44,7 @@ function createFuelDisplay(plant) {
   return container;
 }
 
-function createPlantStorage(plant, resources = {}) {
+function createPlantStorage(plant, resources = {}, playerId, plantId) {
   const fuelAmounts = FUEL_TYPES
     .map(([resource]) => plant[resource] ?? 0)
     .filter((amount) => amount > 0);
@@ -70,6 +70,10 @@ function createPlantStorage(plant, resources = {}) {
     const fuel = FUEL_TYPES.find(([fuelType]) => fuelType === resource);
     storage.appendChild(htmlElement('span', {
       className: `plant-storage-slot${resource ? ` filled fuel-${resource}` : ''}`,
+      draggable: resource ? 'true' : 'false',
+      'data-player-id': playerId,
+      'data-plant-id': plantId,
+      'data-slot-index': slot,
       title: resource ? `${fuel?.[2] ?? resource} stored` : 'Empty storage space',
       'aria-label': resource ? `${fuel?.[2] ?? resource} stored` : 'Empty storage space',
     }));
@@ -78,7 +82,7 @@ function createPlantStorage(plant, resources = {}) {
   return storage;
 }
 
-export function createPlantCard(plantId, plant, playerOwned = false, resources = {}) {
+export function createPlantCard(plantId, plant, playerOwned = false, resources = {}, playerId) {
   const card = htmlElement('article', {
     className: `power-plant-card${plant?.special ? ' special' : ''}${playerOwned ? ' player-owned-plant' : ''}`,
     'data-plant-id': plantId,
@@ -106,7 +110,7 @@ export function createPlantCard(plantId, plant, playerOwned = false, resources =
   );
   card.appendChild(output);
   if (playerOwned) {
-    const storage = createPlantStorage(plant, resources);
+    const storage = createPlantStorage(plant, resources, playerId, plantId);
     if (storage) {
       const fuelStorage = htmlElement('div', { className: 'plant-fuel-storage' });
       fuelStorage.append(createFuelDisplay(plant), storage);

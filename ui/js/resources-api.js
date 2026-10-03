@@ -1,25 +1,9 @@
+import { postApi } from './api-client.js';
+
 export async function requestResourcePrice(player, resources) {
-  const response = await fetch('/api/resource-price', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ player, resources }),
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || 'Resource price request failed');
-  }
-  return result;
+  return postApi('/api/resource-price', { player, resources }, 'Resource price');
 }
 
 export async function requestBuyResources(player, resources) {
-  const response = await fetch('/api/buy-resources', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ player, resources }),
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || 'Resource purchase failed');
-  }
-  return result;
+  return postApi('/api/buy-resources', { player, resources }, 'Buy resources');
 }
