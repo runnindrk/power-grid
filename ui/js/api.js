@@ -31,9 +31,9 @@ async function postApi(url, payload) {
     showStatus(result.status, result.message);
     return result;
   } catch (error) {
-    showStatus('error', 'Request failed');
+    showStatus('error', 'Request Failed');
 
-    return { status: 'error', message: 'Request failed' };
+    return { status: 'error', message: 'Request Failed' };
   }
 }
 

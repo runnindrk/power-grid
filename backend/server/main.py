@@ -22,6 +22,22 @@ from backend.rules.rules import (
     place_bid,
     quote_resources,
 )
+from backend.server.messages import (
+    HOUSE_SPOT_NOT_AVAILABLE,
+    HOUSE_SPOT_UPDATED,
+    INVALID_POWER_PLANT,
+    INVALID_RESOURCE_MOVE,
+    PLACEHOLDER_BID,
+    PLACEHOLDER_BUREAUCRACY,
+    PLACEHOLDER_HOUSE_PURCHASE,
+    PLACEHOLDER_PASS,
+    PLACEHOLDER_RESOURCE_PRICE,
+    PLACEHOLDER_RESOURCE_PURCHASE,
+    POWER_PLANT_READY_UPDATED,
+    RESOURCE_MOVE_REJECTED,
+    RESOURCE_MOVED,
+    error_text,
+)
 from backend.server.game_actions import toggle_house_spot, toggle_ready_to_power, transfer_resource
 from backend.views.game_view import build_view
 
@@ -68,6 +84,7 @@ def _result(code, message, price_label=None):
 
     if code != ErrorCode.E_OK:
         body["status"] = "error"
+        body["message"] = error_text(message)
         status_code = 400
 
     if price_label is not None:
@@ -109,13 +126,13 @@ def house_spot():
     payload = _payload()
 
     if not _has_text(payload, ["city", "spot"]):
-        return _result(ErrorCode.E_NOT_OKAY, "That house spot is not available")
+        return _result(ErrorCode.E_NOT_OKAY, HOUSE_SPOT_NOT_AVAILABLE)
 
     code = toggle_house_spot(payload["city"], payload["spot"])
 
     if code != ErrorCode.E_OK:
-        return _result(code, "That house spot is not available")
-    return _result(code, "House spot updated")
+        return _result(code, HOUSE_SPOT_NOT_AVAILABLE)
+    return _result(code, HOUSE_SPOT_UPDATED)
 
 
 @app.post("/api/buy-houses")
@@ -124,7 +141,7 @@ def buy_houses_route():
     state = load_game_state()
     code = buy_houses(state["current_player"], state["pending_houses"])
 
-    return _result(code, "Placeholder: house purchase")
+    return _result(code, PLACEHOLDER_HOUSE_PURCHASE)
 
 
 @app.post("/api/resource-price")
@@ -134,7 +151,7 @@ def resource_price():
     price = quote_resources(payload.get("player"), payload.get("resources"))
     price_label = load_settings()["text"]["price_format"].format(price=price)
 
-    return _result(ErrorCode.E_OK, "Placeholder: resource price", price_label)
+    return _result(ErrorCode.E_OK, PLACEHOLDER_RESOURCE_PRICE, price_label)
 
 
 @app.post("/api/buy-resources")
@@ -143,7 +160,7 @@ def buy_resources_route():
     payload = _payload()
     code = buy_resources(payload.get("player"), payload.get("resources"))
 
-    return _result(code, "Placeholder: resource purchase")
+    return _result(code, PLACEHOLDER_RESOURCE_PURCHASE)
 
 
 @app.post("/api/transfer-plant-resource")
@@ -153,7 +170,7 @@ def transfer_plant_resource():
     int_names = ["source_plant_id", "source_slot", "target_plant_id", "target_slot"]
 
     if not _has_text(payload, ["player"]) or not _has_int(payload, int_names):
-        return _result(ErrorCode.E_NOT_OKAY, "Invalid resource move")
+        return _result(ErrorCode.E_NOT_OKAY, INVALID_RESOURCE_MOVE)
 
     code = transfer_resource(
         payload["player"],
@@ -164,8 +181,8 @@ def transfer_plant_resource():
     )
 
     if code != ErrorCode.E_OK:
-        return _result(code, "Resource move rejected")
-    return _result(code, "Resource moved")
+        return _result(code, RESOURCE_MOVE_REJECTED)
+    return _result(code, RESOURCE_MOVED)
 
 
 @app.post("/api/plant/ready-to-power")
@@ -174,13 +191,13 @@ def ready_to_power():
     payload = _payload()
 
     if not _has_text(payload, ["player"]) or not _has_int(payload, ["plant_id"]):
-        return _result(ErrorCode.E_NOT_OKAY, "Invalid power plant")
+        return _result(ErrorCode.E_NOT_OKAY, INVALID_POWER_PLANT)
 
     code = toggle_ready_to_power(payload["player"], payload["plant_id"])
 
     if code != ErrorCode.E_OK:
-        return _result(code, "Invalid power plant")
-    return _result(code, "Power plant ready state updated")
+        return _result(code, INVALID_POWER_PLANT)
+    return _result(code, POWER_PLANT_READY_UPDATED)
 
 
 @app.post("/api/bid")
@@ -189,7 +206,7 @@ def bid():
     payload = _payload()
     code = place_bid(payload.get("player"), payload.get("amount"))
 
-    return _result(code, "Placeholder: bid")
+    return _result(code, PLACEHOLDER_BID)
 
 
 @app.post("/api/bid/pass")
@@ -197,7 +214,7 @@ def pass_bid_route():
     """Placeholder: pass in the power plant auction."""
     code = pass_bid(_payload().get("player"))
 
-    return _result(code, "Placeholder: pass")
+    return _result(code, PLACEHOLDER_PASS)
 
 
 @app.post("/api/bureaucracy")
@@ -205,7 +222,7 @@ def run_bureaucracy():
     """Placeholder: run the bureaucracy phase."""
     code = bureaucracy(load_game_state())
 
-    return _result(code, "Placeholder: bureaucracy")
+    return _result(code, PLACEHOLDER_BUREAUCRACY)
 
 # -------------------------------------------------------------------------------------------------
 # Main
