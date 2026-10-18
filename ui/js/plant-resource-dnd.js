@@ -1,81 +1,67 @@
-import { requestPlantResourceMove } from './game-api.js';
+import { postPlantResourceMove } from './api.js';
 
-const STORAGE_SLOT_SELECTOR = '.plant-storage-slot';
+// Returns the storage slot the event happened on, or null (e.g. when the player drags selected text).
+function findStorageSlot(target) {
+  if (target instanceof Element) {
+    return target.closest('.plant-storage-slot');
+  }
 
-function getStorageSlot(target) {
-  return target instanceof Element ? target.closest(STORAGE_SLOT_SELECTOR) : null;
+  return null;
 }
 
-function getDragPayload(slot) {
-  return {
-    player: slot.dataset.playerId,
-    source_plant_id: Number(slot.dataset.plantId),
-    source_slot: Number(slot.dataset.slotIndex),
-  };
-}
-
-export function initPlantResourceDragAndDrop(board, onGameStateUpdated) {
-  let draggedResource = null;
-
+// Lets the player drag a stored resource onto another storage slot; the backend decides if the move is valid.
+export function initPlantResourceDragAndDrop(board, refresh) {
   board.addEventListener('dragstart', (event) => {
-    const slot = getStorageSlot(event.target);
-    if (!slot?.classList.contains('filled')) {
-      event.preventDefault();
-      return;
-    }
+    const slot = findStorageSlot(event.target);
 
-    draggedResource = getDragPayload(slot);
+    if (slot === null) return;
+
     slot.classList.add('dragging');
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', JSON.stringify(draggedResource));
-    }
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', slot.dataset.drag);
   });
 
   board.addEventListener('dragend', (event) => {
-    getStorageSlot(event.target)?.classList.remove('dragging');
-    draggedResource = null;
-    board.querySelectorAll('.drop-target').forEach((slot) => slot.classList.remove('drop-target'));
+    const slot = findStorageSlot(event.target);
+
+    if (slot !== null) {
+      slot.classList.remove('dragging');
+    }
+
+    for (const dropTarget of board.querySelectorAll('.drop-target')) {
+      dropTarget.classList.remove('drop-target');
+    }
   });
 
   board.addEventListener('dragover', (event) => {
-    const slot = getStorageSlot(event.target);
-    if (!slot) return;
+    const slot = findStorageSlot(event.target);
+
+    if (slot === null) return;
+
     event.preventDefault();
     slot.classList.add('drop-target');
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = 'move';
   });
 
   board.addEventListener('dragleave', (event) => {
-    getStorageSlot(event.target)?.classList.remove('drop-target');
+    const slot = findStorageSlot(event.target);
+
+    if (slot === null) return;
+
+    slot.classList.remove('drop-target');
   });
 
-  board.addEventListener('drop', async (event) => {
-    const target = getStorageSlot(event.target);
-    if (!target) return;
+  board.addEventListener('drop', (event) => {
+    const slot = findStorageSlot(event.target);
+
+    if (slot === null) return;
+
     event.preventDefault();
-    target.classList.remove('drop-target');
+    slot.classList.remove('drop-target');
 
-    let source = draggedResource;
-    if (event.dataTransfer) {
-      try {
-        source = JSON.parse(event.dataTransfer.getData('text/plain'));
-      } catch (error) {
-        console.error(error);
-        return;
-      }
-    }
-    if (!source) return;
+    const source = JSON.parse(event.dataTransfer.getData('text/plain'));
+    const target = JSON.parse(slot.dataset.drop);
 
-    try {
-      const result = await requestPlantResourceMove({
-        ...source,
-        target_plant_id: Number(target.dataset.plantId),
-        target_slot: Number(target.dataset.slotIndex),
-      });
-      onGameStateUpdated(result.game_state);
-    } catch (error) {
-      console.error(error);
-    }
+    postPlantResourceMove(source, target).then(refresh);
   });
 }

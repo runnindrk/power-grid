@@ -1,129 +1,124 @@
 import { htmlElement } from './dom-utils.js';
-import { fetchPlantDeck } from './data-source.js';
-import { RESOURCE_ICONS } from './resource-icons.js';
+import { postReadyToPower } from './api.js';
 
-const FUEL_LABELS = { coal: 'Coal', oil: 'Oil', trash: 'Trash', gas: 'Gas', uranium: 'Uranium' };
-const FUEL_TYPES = Object.keys(FUEL_LABELS);
-
-function requiredFuels(plant) {
-  return FUEL_TYPES
-    .filter((resource) => plant[resource] > 0)
-    .map((resource) => ({ resource, label: FUEL_LABELS[resource], amount: plant[resource] }));
-}
-
-// A plant stores up to twice the fuel it burns per round.
-function storageCapacity(plant) {
-  const amounts = requiredFuels(plant).map(({ amount }) => amount);
-  if (amounts.length === 0) return 0;
-  const fuelAmount = plant.hybrid ? Math.max(...amounts) : amounts.reduce((total, amount) => total + amount, 0);
-  return fuelAmount * 2;
-}
-
-function createFuelDisplay(plant) {
-  const fuels = requiredFuels(plant);
+function createFuelDisplay(fuel) {
   const container = htmlElement('div', { className: 'plant-fuels' });
 
-  if (fuels.length === 0) {
-    container.appendChild(htmlElement('span', { className: 'plant-no-fuel', textContent: 'No fuel' }));
+  if (fuel.empty_label) {
+    container.appendChild(htmlElement('span', { className: 'plant-no-fuel', textContent: fuel.empty_label }));
     return container;
   }
 
-  const options = htmlElement('div', { className: `fuel-options${plant.hybrid ? ' hybrid' : ''}` });
-  fuels.forEach(({ resource, label, amount }, index) => {
-    if (index > 0) {
-      options.appendChild(htmlElement('span', {
-        className: 'fuel-join',
-        textContent: plant.hybrid ? 'or' : '+',
-      }));
+  const options = htmlElement('div', { className: fuel.classes });
+
+  for (const item of fuel.items) {
+    if (item.join) {
+      options.appendChild(htmlElement('span', { className: 'fuel-join', textContent: item.join }));
     }
-    const item = htmlElement('span', {
-      className: `fuel-item fuel-${resource}`,
-      title: label,
-      'aria-label': `${amount} ${label}`,
+
+    const element = htmlElement('span', {
+      className: item.classes,
+      title: item.label,
+      'aria-label': item.aria_label,
     });
-    item.append(
-      htmlElement('span', { className: 'fuel-icon', textContent: RESOURCE_ICONS[resource] }),
-      htmlElement('span', { className: 'fuel-amount', textContent: amount }),
+
+    element.append(
+      htmlElement('span', { className: 'fuel-icon', textContent: item.icon }),
+      htmlElement('span', { className: 'fuel-amount', textContent: item.amount }),
     );
-    options.appendChild(item);
-  });
+    options.appendChild(element);
+  }
+
   container.appendChild(options);
+
   return container;
 }
 
-function createPlantStorage(plant, { playerId, resources = {} }, plantId) {
-  const capacity = storageCapacity(plant);
-  if (capacity === 0) return null;
+// Each storage slot carries, as text, the data the drag and drop needs to tell the backend what moved.
+function createPlantStorage(storage) {
+  const element = htmlElement('div', { className: 'plant-storage', 'aria-label': storage.aria_label });
 
-  const storedResources = Object.entries(resources)
-    .flatMap(([resource, amount]) => Array(Math.max(0, Math.floor(amount))).fill(resource))
-    .slice(0, capacity);
-  const storage = htmlElement('div', {
-    className: 'plant-storage',
-    'aria-label': `${capacity} resource storage spaces`,
-  });
+  for (const slot of storage.slots) {
+    const slotElement = htmlElement('span', {
+      className: slot.classes,
+      draggable: slot.draggable,
+      title: slot.title,
+      'aria-label': slot.title,
+    });
 
-  for (let slot = 0; slot < capacity; slot += 1) {
-    const resource = storedResources[slot];
-    const description = resource ? `${FUEL_LABELS[resource] ?? resource} stored` : 'Empty storage space';
-    storage.appendChild(htmlElement('span', {
-      className: `plant-storage-slot${resource ? ` filled fuel-${resource}` : ''}`,
-      draggable: resource ? 'true' : 'false',
-      'data-player-id': playerId,
-      'data-plant-id': plantId,
-      'data-slot-index': slot,
-      title: description,
-      'aria-label': description,
-    }));
+    slotElement.dataset.drag = JSON.stringify(slot.drag);
+    slotElement.dataset.drop = JSON.stringify(slot.drop);
+    element.appendChild(slotElement);
   }
-  return storage;
+
+  return element;
 }
 
-// `owner` ({ playerId, resources }) is set only for plants on a player board, which show their storage.
-export function createPlantCard(plantId, plant, owner = null) {
-  const card = htmlElement('article', {
-    className: `power-plant-card${plant?.special ? ' special' : ''}${owner ? ' player-owned-plant' : ''}`,
-    'data-plant-id': plantId,
-    'aria-label': plant
-      ? `Power plant ${plantId}, powers ${plant.houses} cities`
-      : `Power plant ${plantId}, details unavailable`,
+function createReadyToPowerButton(ready, refresh) {
+  const button = htmlElement('button', {
+    className: 'plant-ready-button',
+    type: 'button',
+    textContent: 'Ready to power',
+    'aria-pressed': ready.pressed,
+  });
+
+  button.addEventListener('click', () => {
+    postReadyToPower(ready.player_id, ready.plant_id).then(refresh);
+  });
+
+  return button;
+}
+
+export function createPlantCard(card, refresh) {
+  const article = htmlElement('article', {
+    className: card.classes,
+    'data-plant-id': card.plant_id,
+    'aria-label': card.aria_label,
   });
   const heading = htmlElement('div', { className: 'plant-heading' });
-  heading.append(
-    htmlElement('span', { className: 'plant-number', textContent: plantId }),
-    htmlElement('span', { className: 'plant-kind', textContent: plant?.special ? 'Special' : 'Plant' }),
-  );
-  card.appendChild(heading);
 
-  if (!plant) {
-    card.appendChild(htmlElement('p', { className: 'plant-unavailable', textContent: 'Details unavailable' }));
-    return card;
+  heading.append(
+    htmlElement('span', { className: 'plant-number', textContent: card.plant_id }),
+    htmlElement('span', { className: 'plant-kind', textContent: card.kind }),
+  );
+  article.appendChild(heading);
+
+  if (card.unavailable) {
+    article.appendChild(htmlElement('p', { className: 'plant-unavailable', textContent: 'Details unavailable' }));
+    return article;
   }
 
   const output = htmlElement('div', { className: 'plant-output' });
+
   output.append(
     htmlElement('span', { className: 'output-icon', 'aria-hidden': 'true', textContent: '⌂' }),
-    htmlElement('span', { className: 'output-count', textContent: plant.houses }),
+    htmlElement('span', { className: 'output-count', textContent: card.houses }),
     htmlElement('span', { className: 'output-label', textContent: 'cities' }),
   );
-  card.appendChild(output);
+  article.appendChild(output);
 
-  const storage = owner && createPlantStorage(plant, owner, plantId);
-  if (storage) {
+  if (card.storage) {
     const fuelStorage = htmlElement('div', { className: 'plant-fuel-storage' });
-    fuelStorage.append(createFuelDisplay(plant), storage);
-    card.appendChild(fuelStorage);
+
+    fuelStorage.append(createFuelDisplay(card.fuel), createPlantStorage(card.storage));
+    article.appendChild(fuelStorage);
   } else {
-    card.appendChild(createFuelDisplay(plant));
+    article.appendChild(createFuelDisplay(card.fuel));
   }
-  return card;
+
+  if (card.ready_to_power) {
+    article.appendChild(createReadyToPowerButton(card.ready_to_power, refresh));
+  }
+
+  return article;
 }
 
-export async function initPowerPlantMarket(gameState) {
-  const { deck } = await fetchPlantDeck();
-  const plantsById = new Map(deck.map((plant) => [plant.cost, plant]));
+export function renderPowerPlantMarket(cards, refresh) {
   const grid = document.querySelector('#power-plant-market .power-plant-grid');
 
-  grid.replaceChildren(...gameState.power_plant_market.map((plantId) => createPlantCard(plantId, plantsById.get(plantId))));
-  return plantsById;
+  grid.replaceChildren();
+
+  for (const card of cards) {
+    grid.appendChild(createPlantCard(card, refresh));
+  }
 }

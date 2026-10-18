@@ -23,9 +23,6 @@ header h1 {
 }
 .turn-order-player.current {
   font-weight: 800;
-  text-decoration: underline;
-  text-decoration-color: #ffd54f;
-  text-underline-offset: 4px;
 }
 .toolbar-divider {
   height: 24px;

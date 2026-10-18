@@ -1,0 +1,59 @@
+{
+    "rules": {
+        "max_players_on_board": 6,
+        "plant_slots_per_player": 3,
+        "min_bid": 1
+    },
+    "text": {
+        "map_title": "Germany",
+        "stats_line": "{title} · {cities} cities · {connections} connections",
+        "region_line": "Region: {region}",
+        "connections_line": "Connections: {count}",
+        "houses_line": "Houses: {owned}/{total}",
+        "house_prompt": "Select house spots",
+        "waiting_for_turn": "Waiting for turn",
+        "total_price": "Total ${price}",
+        "price_format": "${price}",
+        "money_format": "${money}",
+        "no_bid_yet": "No bid yet",
+        "in_network": "in network",
+        "no_fuel": "No fuel",
+        "empty_plant_slot": "Empty",
+        "empty_storage": "Empty storage space",
+        "stored_title": "{resource} stored",
+        "plant_kind": "Plant",
+        "special_kind": "Special",
+        "action_labels": {
+            "determining_player_order": "Determining Player Order",
+            "power_plant_auction": "Power Plant Auction",
+            "buying_resources": "Buying Resources",
+            "building_houses": "Building Houses",
+            "bureaucracy": "Bureaucracy"
+        }
+    },
+    "display": {
+        "player_colors": ["#e85d5d", "#519cde", "#43a047", "#fb8c00", "#9445aa", "#fdd835"],
+        "region_colors": {
+            "Green": "#43a047",
+            "Orange": "#fb8c00",
+            "Red": "#e53935",
+            "Yellow": "#fdd835",
+            "Blue": "#519cde",
+            "Purple": "#9445aa"
+        },
+        "default_label_color": "#888",
+        "empty_spot_color": "#30343b",
+        "cost_colors": {
+            "low": [141, 85, 36],
+            "mid": [154, 160, 166],
+            "high": [255, 213, 79]
+        },
+        "map": {
+            "scale": 1.25,
+            "spot_radius": 11,
+            "mark_radius": 5.5,
+            "city_label_offset": 14,
+            "outline_url": "/game_info/maps/germany/germany_outline.jpg"
+        }
+    }
+}

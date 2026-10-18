@@ -1,33 +1,40 @@
-import { fetchGameState } from './data-source.js';
-import { initGameHeader } from './game-header.js';
-import { initHousePurchase } from './house-purchase.js';
-import { initMap } from './map-view.js';
-import { initMoneyCard } from './money-card.js';
-import { initPlayerBoard } from './player-board.js';
-import { initPowerPlantMarket } from './power-plant-market.js';
-import { initReplenishmentCard } from './replenishment-card.js';
-import { initResourceMarket } from './resource-market.js';
+import { fetchView } from './api.js';
+import { renderHeader } from './game-header.js';
+import { renderMap } from './map-view.js';
+import { renderMoneyCard } from './money-card.js';
+import { initPlantResourceDragAndDrop } from './plant-resource-dnd.js';
+import { renderPlayerBoard } from './player-board.js';
+import { renderPowerPlantMarket } from './power-plant-market.js';
+import { renderReplenishmentCard } from './replenishment-card.js';
+import { renderResourceMarket } from './resource-market.js';
 
-async function initCards(gameState) {
-  const infoCards = document.getElementById('info-cards');
-  await initMoneyCard(infoCards);
-  await initReplenishmentCard(infoCards, gameState);
+// Draws the whole page from the view sent by the backend.
+function render(view) {
+  renderMap(view.map, refresh);
+  renderHeader(view.header);
+  renderPlayerBoard(view.players, refresh);
+  renderPowerPlantMarket(view.power_plant_market, refresh);
+  renderResourceMarket(view.resource_market);
+
+  document.getElementById('info-cards').replaceChildren(
+    renderMoneyCard(view.money),
+    renderReplenishmentCard(view.replenishment),
+  );
+}
+
+// Asks the backend for the current view and draws it; called after every action.
+async function refresh() {
+  render(await fetchView());
 }
 
 async function init() {
-  const gameState = await fetchGameState();
-  const [map, , plantsById] = await Promise.all([
-    initMap(gameState),
-    initCards(gameState),
-    initPowerPlantMarket(gameState),
-  ]);
-  initGameHeader(gameState);
-  initPlayerBoard(gameState, plantsById);
-  initHousePurchase(gameState, map);
-  initResourceMarket(gameState);
+  initPlantResourceDragAndDrop(document.getElementById('player-board'), refresh);
+
+  await refresh();
 }
 
 init().catch((error) => {
   console.error(error);
+
   document.getElementById('placement-status').textContent = 'Unable to load game data';
 });

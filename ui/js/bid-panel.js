@@ -1,43 +1,40 @@
 import { htmlElement } from './dom-utils.js';
+import { postBid, postPassBid } from './api.js';
 
-export function createBidPanel(playerAlias, money) {
-  const panel = htmlElement('form', {
-    className: 'player-bid-panel',
-    'aria-label': `Power plant bid for ${playerAlias}`,
-  });
+export function createBidPanel(player, refresh) {
+  const bid = player.bid;
+  const panel = htmlElement('form', { className: 'player-bid-panel', 'aria-label': bid.aria_label });
+
   const input = htmlElement('input', {
     className: 'bid-amount',
     type: 'number',
-    min: '1',
-    max: String(money),
+    min: bid.min,
+    max: bid.max,
     step: '1',
-    value: '1',
+    value: bid.value,
     required: 'required',
-    'aria-label': `Bid amount for ${playerAlias}`,
+    'aria-label': bid.input_aria_label,
   });
-  const label = htmlElement('label', { className: 'bid-field' });
-  label.append(htmlElement('span', { textContent: 'Bid $' }), input);
+  const field = htmlElement('label', { className: 'bid-field' });
+  field.append(htmlElement('span', { textContent: 'Bid $' }), input);
 
   const bidButton = htmlElement('button', { className: 'bid-submit', type: 'submit', textContent: 'Bid' });
   const passButton = htmlElement('button', { className: 'bid-pass', type: 'button', textContent: 'Out' });
-  const status = htmlElement('span', {
-    className: 'bid-status',
-    'aria-live': 'polite',
-    textContent: 'No bid yet',
-  });
-  panel.append(label, bidButton, passButton, status);
+  const status = htmlElement('span', { className: 'bid-status', 'aria-live': 'polite', textContent: bid.status });
+
+  input.disabled = bid.disabled;
+  bidButton.disabled = bid.disabled;
+  passButton.disabled = bid.disabled;
+  panel.append(field, bidButton, passButton, status);
 
   panel.addEventListener('submit', (event) => {
     event.preventDefault();
-    const amount = input.valueAsNumber;
-    input.min = String(amount + 1);
-    status.textContent = `Bid: $${amount}`;
+
+    postBid(player.player, input.value).then(refresh);
   });
+
   passButton.addEventListener('click', () => {
-    input.disabled = true;
-    bidButton.disabled = true;
-    passButton.disabled = true;
-    status.textContent = 'Out';
+    postPassBid(player.player).then(refresh);
   });
 
   return panel;

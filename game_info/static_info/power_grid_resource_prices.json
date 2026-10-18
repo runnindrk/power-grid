@@ -1,0 +1,70 @@
+{
+    "price_scales": {
+        "shared": [1, 2, 3, 4, 5, 6, 7, 8],
+        "uranium": [1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16]
+    },
+    "resources": [
+        {
+            "id": "coal",
+            "label": "Coal",
+            "market_label": "Coal",
+            "icon": "🪨",
+            "fuel": true,
+            "buyable": true,
+            "replenished": true,
+            "market": true,
+            "price_scale": "shared",
+            "slots_per_tier": 3,
+            "capacity": 24
+        },
+        {
+            "id": "oil",
+            "label": "Oil",
+            "market_label": "Oil",
+            "icon": "🛢️",
+            "fuel": true,
+            "buyable": true,
+            "replenished": true,
+            "market": true,
+            "price_scale": "shared",
+            "slots_per_tier": 3,
+            "capacity": 24
+        },
+        {
+            "id": "trash",
+            "label": "Trash",
+            "market_label": "Garbage",
+            "icon": "🗑️",
+            "fuel": true,
+            "buyable": true,
+            "replenished": true,
+            "market": true,
+            "price_scale": "shared",
+            "slots_per_tier": 3,
+            "capacity": 24
+        },
+        {
+            "id": "gas",
+            "label": "Gas",
+            "market_label": "Gas",
+            "icon": "🔥",
+            "fuel": true,
+            "buyable": false,
+            "replenished": false,
+            "market": false
+        },
+        {
+            "id": "uranium",
+            "label": "Uranium",
+            "market_label": "Nuclear",
+            "icon": "☢️",
+            "fuel": true,
+            "buyable": true,
+            "replenished": true,
+            "market": true,
+            "price_scale": "uranium",
+            "slots_per_tier": 1,
+            "capacity": 12
+        }
+    ]
+}

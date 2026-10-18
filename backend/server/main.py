@@ -12,82 +12,200 @@ from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 # Must run before the backend imports so the script works when launched directly.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from backend.rules.rules import ErrorCode, bureaucracy, build_houses, buy_resources
-from backend.server.paths import PROJECT_ROOT
-from backend.server.resource_transfer_service import transfer_resource
+from backend.data_files import PROJECT_ROOT, load_game_state, load_settings
+from backend.rules.rules import (
+    ErrorCode,
+    bureaucracy,
+    buy_houses,
+    buy_resources,
+    pass_bid,
+    place_bid,
+    quote_resources,
+)
+from backend.server.game_actions import toggle_house_spot, toggle_ready_to_power, transfer_resource
+from backend.views.game_view import build_view
 
-PUBLIC_DIRECTORIES = {"ui", "game_info"}
+PUBLIC_DIRECTORIES = ["ui", "game_info"]
 
 app = Flask(__name__)
 
 # -------------------------------------------------------------------------------------------------
-# Routes
+# Helpers
+
+def _payload():
+    """Return the JSON body of the request as a dict, or an empty dict if it is missing or invalid."""
+    payload = request.get_json(silent=True)
+
+    if isinstance(payload, dict):
+        return payload
+    return {}
+
+
+def _has_text(payload, names):
+    """Return True if every named field of the payload is a string."""
+    for name in names:
+        if not isinstance(payload.get(name), str):
+            return False
+
+    return True
+
+
+def _has_int(payload, names):
+    """Return True if every named field of the payload is an integer (True and False don't count)."""
+    for name in names:
+        value = payload.get(name)
+
+        if not isinstance(value, int) or isinstance(value, bool):
+            return False
+
+    return True
+
+
+def _result(code, message, price_label=None):
+    """Build the JSON reply of an action: error code, status, message and optionally a price."""
+    body = {"error_code": code.value, "status": "ok", "message": message}
+    status_code = 200
+
+    if code != ErrorCode.E_OK:
+        body["status"] = "error"
+        status_code = 400
+
+    if price_label is not None:
+        body["price_label"] = price_label
+
+    return jsonify(body), status_code
+
+# -------------------------------------------------------------------------------------------------
+# Pages and view
 
 @app.route("/")
 def index():
+    """Redirect the site root to the map page."""
     return redirect("/ui/map.html")
+
+
+@app.get("/api/view")
+def view():
+    """Return everything the UI shows, built from the game state."""
+    return jsonify(build_view(load_game_state()))
 
 
 @app.route("/<path:filename>")
 def serve_file(filename):
+    """Serve a file from the ui or game_info folder; anything else is a 404."""
     directory, _, relative_path = filename.partition("/")
+
     if directory not in PUBLIC_DIRECTORIES:
         abort(404)
+
     return send_from_directory(PROJECT_ROOT / directory, relative_path)
 
+# -------------------------------------------------------------------------------------------------
+# Actions
 
-def _priced_response(price, result):
-    if result != ErrorCode.E_OK:
-        return jsonify({"error_code": result.value}), 400
-    return jsonify({"price": price, "error_code": result.value})
+@app.post("/api/house-spot")
+def house_spot():
+    """Select or deselect a free house spot."""
+    payload = _payload()
+
+    if not _has_text(payload, ["city", "spot"]):
+        return _result(ErrorCode.E_NOT_OKAY, "That house spot is not available")
+
+    code = toggle_house_spot(payload["city"], payload["spot"])
+
+    if code != ErrorCode.E_OK:
+        return _result(code, "That house spot is not available")
+    return _result(code, "House spot updated")
 
 
-@app.post("/api/house-price")
 @app.post("/api/buy-houses")
-def houses():
-    payload = request.get_json() or {}
-    return _priced_response(*build_houses(payload.get("player"), payload.get("houses", [])))
+def buy_houses_route():
+    """Placeholder: buy the selected houses for the current player."""
+    state = load_game_state()
+    code = buy_houses(state["current_player"], state["pending_houses"])
+
+    return _result(code, "Placeholder: house purchase")
 
 
 @app.post("/api/resource-price")
+def resource_price():
+    """Placeholder: return the price of the resources typed in the buy panel."""
+    payload = _payload()
+    price = quote_resources(payload.get("player"), payload.get("resources"))
+    price_label = load_settings()["text"]["price_format"].format(price=price)
+
+    return _result(ErrorCode.E_OK, "Placeholder: resource price", price_label)
+
+
 @app.post("/api/buy-resources")
-def resources():
-    payload = request.get_json() or {}
-    return _priced_response(*buy_resources(payload.get("player"), payload.get("resources", {})))
+def buy_resources_route():
+    """Placeholder: buy the resources typed in the buy panel."""
+    payload = _payload()
+    code = buy_resources(payload.get("player"), payload.get("resources"))
 
-
-def _is_int(value):
-    return isinstance(value, int) and not isinstance(value, bool)
+    return _result(code, "Placeholder: resource purchase")
 
 
 @app.post("/api/transfer-plant-resource")
 def transfer_plant_resource():
-    payload = request.get_json(silent=True)
-    integer_fields = ("source_plant_id", "source_slot", "target_plant_id", "target_slot")
-    if (
-        not isinstance(payload, dict)
-        or not isinstance(payload.get("player"), str)
-        or not all(_is_int(payload.get(key)) for key in integer_fields)
-    ):
-        return jsonify({"error_code": ErrorCode.E_NOT_OKAY.value}), 400
+    """Move one fuel unit between two plants of a player."""
+    payload = _payload()
+    int_names = ["source_plant_id", "source_slot", "target_plant_id", "target_slot"]
 
-    state, result = transfer_resource(
+    if not _has_text(payload, ["player"]) or not _has_int(payload, int_names):
+        return _result(ErrorCode.E_NOT_OKAY, "Invalid resource move")
+
+    code = transfer_resource(
         payload["player"],
         payload["source_plant_id"],
         payload["source_slot"],
         payload["target_plant_id"],
         payload["target_slot"],
     )
-    if result != ErrorCode.E_OK:
-        return jsonify({"error_code": result.value}), 409
-    return jsonify({"game_state": state, "error_code": result.value})
+
+    if code != ErrorCode.E_OK:
+        return _result(code, "Resource move rejected")
+    return _result(code, "Resource moved")
+
+
+@app.post("/api/plant/ready-to-power")
+def ready_to_power():
+    """Flip the ready-to-power flag of a plant."""
+    payload = _payload()
+
+    if not _has_text(payload, ["player"]) or not _has_int(payload, ["plant_id"]):
+        return _result(ErrorCode.E_NOT_OKAY, "Invalid power plant")
+
+    code = toggle_ready_to_power(payload["player"], payload["plant_id"])
+
+    if code != ErrorCode.E_OK:
+        return _result(code, "Invalid power plant")
+    return _result(code, "Power plant ready state updated")
+
+
+@app.post("/api/bid")
+def bid():
+    """Placeholder: place a bid in the power plant auction."""
+    payload = _payload()
+    code = place_bid(payload.get("player"), payload.get("amount"))
+
+    return _result(code, "Placeholder: bid")
+
+
+@app.post("/api/bid/pass")
+def pass_bid_route():
+    """Placeholder: pass in the power plant auction."""
+    code = pass_bid(_payload().get("player"))
+
+    return _result(code, "Placeholder: pass")
 
 
 @app.post("/api/bureaucracy")
 def run_bureaucracy():
-    state = request.get_json() or {}
-    bureaucracy(state)
-    return jsonify({"error_code": ErrorCode.E_OK.value})
+    """Placeholder: run the bureaucracy phase."""
+    code = bureaucracy(load_game_state())
+
+    return _result(code, "Placeholder: bureaucracy")
 
 # -------------------------------------------------------------------------------------------------
 # Main

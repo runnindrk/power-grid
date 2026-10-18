@@ -1,60 +1,54 @@
-import random
-from enum import IntEnum
-from typing import TypedDict
+# -------------------------------------------------------------------------------------------------
+# Imports
 
+from enum import IntEnum
+
+# -------------------------------------------------------------------------------------------------
+# Result codes
 
 class ErrorCode(IntEnum):
     E_OK = 0
     E_NOT_OKAY = 1
 
+# -------------------------------------------------------------------------------------------------
+# Phase 2: Power plant auction (placeholders)
 
-class ResourceStock(TypedDict, total=False):
-    coal: int
-    oil: int
-    trash: int
-    uranium: int
-
-
-class PlayerPowerPlant(TypedDict):
-    plant_id: int
-    resources: ResourceStock
+def place_bid(player, amount):
+    """Placeholder: will record a bid from a player in the auction."""
+    return ErrorCode.E_OK
 
 
-class GameState(TypedDict):
-    number_of_players: int
-    regions_chosen: list[str]
-    rounds_played: int
-    step: int
-    phase: int
-    power_plant_market: list[int]
-    resource_market: ResourceStock
-    player_turn_order: list[str]
-    current_player: str
-    current_action: str
-    player_aliases: dict[str, str]
-    player_money: dict[str, int]
-    player_power_plants: dict[str, list[PlayerPowerPlant]]
-    map_houses: dict[str, dict]
+def pass_bid(player):
+    """Placeholder: will record that a player is out of the auction."""
+    return ErrorCode.E_OK
+
+# -------------------------------------------------------------------------------------------------
+# Phase 3: Resource buying (placeholders)
+
+def quote_resources(player, resources):
+    """Placeholder: will return the price of the resources; always 0 for now."""
+    return 0
 
 
-# Phase 1: Determine player order
-def determine_player_order(players: list[str]) -> list[str]:
-    random.shuffle(players)
-    return players
+def buy_resources(player, resources):
+    """Placeholder: will buy the resources for a player."""
+    return ErrorCode.E_OK
 
-# Phase 2: Power Plant Auction
-def auction_power_plant(plant_id: int, players: list[str], bids: dict[str, int]) -> str:
-    highest_bidder = max(bids, key=bids.get)
-    return highest_bidder
+# -------------------------------------------------------------------------------------------------
+# Phase 4: Building houses (placeholders)
 
-# Phase 3: Resource Buying
-def buy_resources(player: str, resources: ResourceStock) -> tuple[int, ErrorCode]:
-    return 0, ErrorCode.E_OK
+def quote_houses(player, placements):
+    """Placeholder: will return the price of the houses; always 0 for now."""
+    return 0
 
-# Phase 4: Building Houses
-def build_houses(player: str, placements: list[dict[str, str]]) -> tuple[int, ErrorCode]:
-    return 0, ErrorCode.E_OK
 
-# Phase 5: Bureaucracy
-def bureaucracy(state: GameState) -> None:
-    pass
+def buy_houses(player, placements):
+    """Placeholder: will buy houses in the selected city spots for a player."""
+    return ErrorCode.E_OK
+
+# -------------------------------------------------------------------------------------------------
+# Phase 5: Bureaucracy (placeholders)
+
+def bureaucracy(state):
+    """Placeholder: will run the bureaucracy phase (powering plants and income)."""
+    return ErrorCode.E_OK

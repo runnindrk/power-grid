@@ -1,1 +1,0 @@
-remove side panel on base.css, it is useless
