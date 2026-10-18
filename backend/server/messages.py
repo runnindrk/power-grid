@@ -28,10 +28,3 @@ HOUSE_SPOT_NOT_AVAILABLE = "House Spot Not Available"
 INVALID_RESOURCE_MOVE = "Invalid Resource Move"
 RESOURCE_MOVE_REJECTED = "Resource Move Rejected"
 INVALID_POWER_PLANT = "Invalid Power Plant"
-
-# -------------------------------------------------------------------------------------------------
-# Helpers
-
-def error_text(message):
-    """Return an error message in the form 'HTTP Request: <message>'."""
-    return ERROR_PREFIX + message

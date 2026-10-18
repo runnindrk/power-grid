@@ -1,5 +1,5 @@
 header {
-  padding: 10px 16px;
+  padding: 16px var(--header-inset); 
   background: var(--panel);
   border-bottom: 1px solid #2a2e37;
   display: flex;
@@ -8,9 +8,18 @@ header {
   flex-wrap: wrap;
 }
 header h1 {
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  height: 0;
   margin: 0;
-  font-weight: 600;
+  position: relative;
+  top: 0.058em;              /* 2.25px at ~39px font size */
+  font-family: 'Bebas Neue', 'Oswald', 'Arial Narrow', Impact, sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 #stats {
   font-size: 12px;
@@ -30,17 +39,17 @@ header h1 {
   border-radius: 4px;
   color: var(--bg);
   font-weight: 800;
-  padding: 1px 6px;
+  padding: 4px 4px;
 }
 .toolbar-divider {
-  height: 24px;
+  height: 28px;
   border-left: 1px solid #3a404b;
 }
 #map-controls {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   font-size: 12px;
 }
 #placement-status {

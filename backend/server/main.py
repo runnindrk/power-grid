@@ -35,8 +35,7 @@ from backend.server.messages import (
     PLACEHOLDER_RESOURCE_PURCHASE,
     POWER_PLANT_READY_UPDATED,
     RESOURCE_MOVE_REJECTED,
-    RESOURCE_MOVED,
-    error_text,
+    RESOURCE_MOVED
 )
 from backend.server.game_actions import toggle_house_spot, toggle_ready_to_power, transfer_resource
 from backend.views.game_view import build_view
@@ -84,7 +83,7 @@ def _result(code, message, price_label=None):
 
     if code != ErrorCode.E_OK:
         body["status"] = "error"
-        body["message"] = error_text(message)
+        body["message"] = message
         status_code = 400
 
     if price_label is not None:

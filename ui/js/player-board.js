@@ -16,32 +16,24 @@ function createPlantSlot(slot, refresh) {
   return element;
 }
 
-function createHousePurchaseControls(player, refresh) {
+function createHousePurchaseButton(player, refresh) {
   const purchase = player.house_purchase;
-  const controls = htmlElement('div', {
-    className: 'player-house-purchase-controls',
-    'data-player-id': player.player,
-  });
-  const total = htmlElement('span', {
-    className: 'player-house-purchase-total',
-    'aria-live': 'polite',
-    textContent: purchase.total,
-  });
   const button = htmlElement('button', {
     className: 'player-buy-houses-button',
     type: 'button',
-    textContent: 'Buy houses',
     'aria-label': purchase.aria_label,
   });
 
+  button.append(
+    htmlElement('span', { className: 'house-button-label', textContent: purchase.label }),
+    htmlElement('span', { className: 'house-button-total', 'aria-live': 'polite', textContent: purchase.total }),
+  );
   button.disabled = purchase.buy_disabled;
   button.addEventListener('click', () => {
     postBuyHouses().then(refresh);
   });
 
-  controls.append(total, button);
-
-  return controls;
+  return button;
 }
 
 function createPowerButton(refresh) {
@@ -63,20 +55,29 @@ function createPlayerInfo(player, refresh) {
   );
 
   const heading = htmlElement('div', { className: 'player-info-heading' });
+  const title = htmlElement('div', { className: 'player-title' });
 
-  heading.append(
+  title.append(
     htmlElement('span', { className: 'player-name', textContent: player.label }),
+    htmlElement('span', { className: 'player-separator', textContent: '·' }),
     network,
+  );
+  heading.append(
+    title,
     htmlElement('span', { className: 'player-money', textContent: player.money.label }),
   );
 
   const actions = htmlElement('div', { className: 'player-actions' });
+  const pair = htmlElement('div', { className: 'player-action-pair' });
 
+  pair.append(
+    createResourceBuyPanel(player, refresh),
+    createHousePurchaseButton(player, refresh),
+    createPowerButton(refresh),
+  );
   actions.append(
     createBidPanel(player, refresh),
-    createResourceBuyPanel(player, refresh),
-    createHousePurchaseControls(player, refresh),
-    createPowerButton(refresh),
+    pair,
   );
 
   const info = htmlElement('div', { className: 'player-info' });

@@ -1,7 +1,12 @@
 #player-board {
   --player-tile: var(--card-size);
+  --player-row-height: calc(var(--card-size) + 12px);
   --player-row-min-width: calc(var(--player-tile) * 5 + var(--card-gap) * 4);
   width: var(--panel-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  flex: 0 0 auto;
 }
 .player-row {
   width: 100%;
@@ -10,10 +15,13 @@
   grid-template-columns: repeat(5, var(--player-tile));
   gap: var(--card-gap);
 }
+.player-row .power-plant-card {
+  height: var(--player-row-height);
+}
 .player-plant-slot,
 .player-info {
   width: var(--player-tile);
-  height: var(--player-tile);
+  height: var(--player-row-height);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -43,34 +51,48 @@
   width: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
   padding: 4px;
   border-top: 3px solid var(--player-color);
   background: rgba(26, 29, 36, 0.96);
 }
 .player-actions {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .player-info-heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: baseline;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 8px;
-  line-height: 1;
+  padding: 0 2px;
+  line-height: 1.3;
   white-space: nowrap;
+}
+.player-title {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 .player-name {
   min-width: 0;
   overflow: hidden;
-  font-size: 20px;
+  padding-bottom: 2px;
+  font-size: 24px;
   font-weight: 750;
   text-overflow: ellipsis;
 }
+.player-separator {
+  color: var(--muted);
+  font-size: 18px;
+}
 .player-money {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -89,26 +111,22 @@
   color: var(--muted);
   font-size: 9px;
 }
-.player-house-purchase-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-width: 0;
-  gap: 4px;
+.player-action-pair {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 6px;
 }
-.player-house-purchase-total {
+.player-buy-houses-button {
   min-width: 0;
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.player-buy-houses-button,
-.player-power-button {
-  flex: 0 0 auto;
   padding: 3px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
   border: 1px solid #ffd54f;
   border-radius: 4px;
   background: #242a33;
@@ -117,69 +135,85 @@
   font-size: 9px;
   cursor: pointer;
 }
+.house-button-label {
+  font-weight: 700;
+}
+.house-button-total {
+  color: var(--muted);
+}
 .player-power-button {
+  flex: 0 0 auto;
   width: 100%;
+  min-width: 0;
+  padding: 3px 5px;
+  border: 1px solid #ffd54f;
+  border-radius: 4px;
+  background: #242a33;
+  color: var(--text);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
 }
 .player-buy-houses-button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 .player-resource-buy-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 54px;
-  grid-template-rows: 34px;
-  align-items: center;
-  gap: 3px 6px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3px;
 }
 .resource-buy-options {
   min-width: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, 16px);
+  align-content: space-evenly;
   align-items: center;
-  gap: 2px 6px;
+  flex: 1;
+  gap: 2px 4px;
 }
 .resource-buy-row {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px;
+  grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
-.resource-buy-name {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.resource-buy-icon {
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
 }
 .resource-buy-quantity {
-  width: 30px;
+  width: 100%;
   min-width: 0;
-  height: 17px;
-  padding: 1px 2px;
+  height: 26px;
+  padding: 2px 4px;
   border: 1px solid #4a505a;
   border-radius: 3px;
   background: #12151b;
   color: var(--text);
   font: inherit;
-  font-size: 9px;
+  font-size: 13px;
 }
 .resource-buy-button {
   width: 100%;
-  height: 34px;
-  padding: 2px;
+  height: 26px;
+  padding: 0 2px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 4px;
   border: 1px solid #4a505a;
   border-radius: 3px;
   background: #242a33;
   color: var(--text);
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
   cursor: pointer;
 }

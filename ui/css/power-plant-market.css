@@ -65,6 +65,10 @@
   gap: 4px;
   white-space: nowrap;
 }
+.plant-output .plant-ready-button {
+  margin-left: auto;
+  align-self: center;
+}
 .output-icon {
   color: #f3ca52;
   font-size: 19px;
@@ -99,14 +103,18 @@
 }
 .plant-ready-button {
   flex: 0 0 auto;
-  min-height: 24px;
-  padding: 3px 5px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
   border: 1px solid #59616e;
-  border-radius: 3px;
+  border-radius: 50%;
   background: #1a1d24;
   color: var(--muted);
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1;
   cursor: pointer;
 }
 .plant-ready-button[aria-pressed="true"] {

@@ -58,17 +58,23 @@ def plant_slots(config, state, player, deck):
 # Player controls
 
 def house_purchase_view(config, state, player):
-    """Describe the house buying controls: the text to show and whether the buy button is disabled."""
+    """Describe the house buying button: its label, its summary (houses and price) and whether it is disabled."""
     text = config["text"]
-    result = {"aria_label": f"Buy houses for {player_label(state, player)}", "buy_disabled": True}
+    count = len(state["pending_houses"])
+
+    result = {
+        "label": text["buy_houses"],
+        "aria_label": f"Buy houses for {player_label(state, player)}",
+        "buy_disabled": True,
+    }
 
     if player != state["current_player"]:
         result["total"] = text["waiting_for_turn"]
-    elif not state["pending_houses"]:
+    elif count == 0:
         result["total"] = text["house_prompt"]
     else:
         price = quote_houses(player, state["pending_houses"])
-        result["total"] = text["total_price"].format(price=price)
+        result["total"] = text["house_summary"].format(count=count, price=price)
         result["buy_disabled"] = False
 
     return result
@@ -86,6 +92,7 @@ def resource_buy_view(config, state, player):
             rows.append({
                 "resource": resource["id"],
                 "label": label,
+                "icon": resource["icon"],
                 "classes": ["resource-buy-row", "resource-" + resource["id"]],
                 "aria_label": f"{label} quantity for {alias}",
             })

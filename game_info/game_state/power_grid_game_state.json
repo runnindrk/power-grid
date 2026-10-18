@@ -41,7 +41,7 @@
         "p4": "Rita"
     },
     "player_money": {
-        "p1": 50,
+        "p1": 250,
         "p2": 50,
         "p3": 50,
         "p4": 50
@@ -51,7 +51,7 @@
             {
                 "plant_id": 5,
                 "resources": {
-                    "coal": 2,
+                    "coal": 3,
                     "oil": 0,
                     "trash": 0,
                     "gas": 0,
@@ -62,7 +62,7 @@
             {
                 "plant_id": 8,
                 "resources": {
-                    "coal": 3,
+                    "coal": 2,
                     "oil": 1,
                     "trash": 0,
                     "gas": 0,
@@ -85,6 +85,17 @@
         "p2": [
             {
                 "plant_id": 31,
+                "resources": {
+                    "coal": 0,
+                    "oil": 0,
+                    "trash": 0,
+                    "gas": 0,
+                    "uranium": 0
+                },
+                "ready_to_power": false
+            },
+            {
+                "plant_id": 46,
                 "resources": {
                     "coal": 0,
                     "oil": 0,

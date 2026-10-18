@@ -5,6 +5,8 @@
   --muted: #9aa0a6;
   --line: #5b6472;
   --line-highlight: #ffd54f;
+  --page-inset: 8px;
+  --header-inset: calc(var(--page-inset) + 4px);  /* header: 12px */
 }
 * { box-sizing: border-box; }
 body {
@@ -26,6 +28,7 @@ main {
   width: max-content;
   height: 100%;
   min-height: 0;
+  padding: var(--card-gap) var(--page-inset);
 }
 #map-panel {
   flex: 0 0 auto;

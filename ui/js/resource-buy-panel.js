@@ -17,7 +17,10 @@ export function createResourceBuyPanel(player, refresh) {
     });
     const label = htmlElement('label', { className: row.classes });
 
-    label.append(htmlElement('span', { className: 'resource-buy-name', textContent: row.label }), input);
+    label.append(
+      htmlElement('span', { className: 'resource-buy-icon', title: row.label, textContent: row.icon }),
+      input,
+    );
     options.appendChild(label);
     inputs[row.resource] = input;
   }

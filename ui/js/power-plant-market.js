@@ -58,7 +58,9 @@ function createReadyToPowerButton(ready, refresh) {
   const button = htmlElement('button', {
     className: 'plant-ready-button',
     type: 'button',
-    textContent: 'Ready to power',
+    title: 'Ready to power',
+    'aria-label': 'Ready to power',
+    textContent: '⚡',
     'aria-pressed': ready.pressed,
   });
 
@@ -95,6 +97,10 @@ export function createPlantCard(card, refresh) {
     htmlElement('span', { className: 'output-count', textContent: card.houses }),
     htmlElement('span', { className: 'output-label', textContent: 'cities' }),
   );
+
+  if (card.ready_to_power) {
+    output.appendChild(createReadyToPowerButton(card.ready_to_power, refresh));
+  }
   article.appendChild(output);
 
   if (card.storage) {
@@ -104,10 +110,6 @@ export function createPlantCard(card, refresh) {
     article.appendChild(fuelStorage);
   } else {
     article.appendChild(createFuelDisplay(card.fuel));
-  }
-
-  if (card.ready_to_power) {
-    article.appendChild(createReadyToPowerButton(card.ready_to_power, refresh));
   }
 
   return article;
