@@ -136,7 +136,14 @@ export function renderMap(map, refresh) {
     cities.appendChild(createCity(city, tooltip, refresh));
   }
 
-  svg.replaceChildren(outline, boundary, createLines(map), cities);
+  let viewport = document.getElementById('viewport');
+
+  if (viewport === null) {
+    viewport = el('g', { id: 'viewport' });
+    svg.appendChild(viewport);
+  }
+
+  viewport.replaceChildren(outline, boundary, createLines(map), cities);
 
   document.getElementById('stats').textContent = map.stats;
 }

@@ -46,6 +46,7 @@ def header_view(config, state):
 
         turn_order.append({
             "label": player_label(state, player),
+            "color": player_color(config, state, player),
             "current": player == current,
             "classes": classes,
         })
@@ -56,6 +57,20 @@ def header_view(config, state):
     return {
         "turn_order": turn_order,
         "placement_status": f"{action_label} · {player_label(state, current)}",
+    }
+
+# -------------------------------------------------------------------------------------------------
+# Next card back
+
+def next_card_back_view(config, state):
+    """Describe the back of the next power plant card: its heading, its label and its back type."""
+    back = state["back_of_the_next_card"]
+    text = config["text"]
+
+    return {
+        "heading": text["next_card_heading"],
+        "classes": ["info-card", "next-card-back", back],
+        "label": text["back_of_the_card"][back],
     }
 
 # -------------------------------------------------------------------------------------------------
@@ -88,6 +103,7 @@ def build_view(state):
         "players": player_rows,
         "power_plant_market": market_cards,
         "resource_market": resource_market_view(config, state),
+        "next_card_back": next_card_back_view(config, state),
         "money": money_view(load_money()),
         "replenishment": replenishment_view(config, state, load_replenishment()),
     }

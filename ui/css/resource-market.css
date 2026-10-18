@@ -1,6 +1,6 @@
 #resource-market {
   --resource-slot-size: 8px;
-  width: var(--dashboard-width);
+  width: var(--panel-width);
   height: var(--resource-market-height);
   flex: 0 0 var(--resource-market-height);
   padding: 5px;

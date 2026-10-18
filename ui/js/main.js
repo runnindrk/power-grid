@@ -1,7 +1,9 @@
 import { fetchView } from './api.js';
 import { renderHeader } from './game-header.js';
 import { renderMap } from './map-view.js';
+import { initMapPanZoom } from './map-pan-zoom.js';
 import { renderMoneyCard } from './money-card.js';
+import { renderNextCardBack } from './next-card-back.js';
 import { initPlantResourceDragAndDrop } from './plant-resource-dnd.js';
 import { renderPlayerBoard } from './player-board.js';
 import { renderPowerPlantMarket } from './power-plant-market.js';
@@ -15,6 +17,7 @@ function render(view) {
   renderPlayerBoard(view.players, refresh);
   renderPowerPlantMarket(view.power_plant_market, refresh);
   renderResourceMarket(view.resource_market);
+  renderNextCardBack(view.next_card_back);
 
   document.getElementById('info-cards').replaceChildren(
     renderMoneyCard(view.money),
@@ -31,6 +34,8 @@ async function init() {
   initPlantResourceDragAndDrop(document.getElementById('player-board'), refresh);
 
   await refresh();
+
+  initMapPanZoom(document.getElementById('map'));
 }
 
 init().catch((error) => {

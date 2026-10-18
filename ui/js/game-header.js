@@ -15,6 +15,8 @@ export function renderHeader(header) {
     playerTurn.className = player.classes.join(' ');
     playerTurn.textContent = player.label;
 
+    playerTurn.style.setProperty('--player-color', player.color);
+
     if (player.current) {
       playerTurn.setAttribute('aria-current', 'true');
     }

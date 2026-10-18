@@ -1,7 +1,8 @@
 :root {
   --card-size: min(166px, calc((100vh - 220px) / 4));
   --card-gap: 8px;
-  --dashboard-width: calc(var(--card-size) * 5 + var(--card-gap) * 4);
+  --panel-width: calc(var(--card-size) * 5 + var(--card-gap) * 4);
+  --dashboard-width: calc(var(--panel-width) + var(--card-size) + var(--card-gap));
 }
 #cards-panel {
   --resource-market-height: 112px;
@@ -14,7 +15,7 @@
   flex: 0 0 auto;
   width: max-content;
   display: grid;
-  grid-template-columns: repeat(5, var(--card-size));
+  grid-template-columns: repeat(6, var(--card-size));
   grid-template-rows: repeat(2, var(--card-size));
   gap: var(--card-gap);
 }
@@ -36,4 +37,31 @@
   border-radius: 8px;
   padding: 6px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+#next-card-back {
+  grid-column: 6;
+  grid-row: 2;
+}
+.next-card-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+.next-card-back-heading {
+  font-size: 11px;
+  color: var(--muted);
+}
+.next-card-back-label {
+  font-size: 18px;
+  font-weight: 700;
+}
+.next-card-back.plug .next-card-back-label {
+  color: #e8b957;
+}
+.next-card-back.no_plug .next-card-back-label {
+  color: var(--muted);
 }

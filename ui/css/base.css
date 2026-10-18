@@ -22,22 +22,18 @@ main {
   position: relative;
 }
 #board-layout {
-  display: grid;
-  grid-template-columns: var(--dashboard-width) minmax(480px, 1fr);
-  width: max(100%, calc(480px + var(--dashboard-width)));
+  display: flex;
+  width: max-content;
   height: 100%;
   min-height: 0;
 }
 #map-panel {
-  min-width: 0;
-  min-height: 0;
+  flex: 0 0 auto;
   height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  overflow: hidden;
+  margin-left: var(--card-gap);
 }
 #dashboard-panel {
+  flex: 0 0 auto;
   width: var(--dashboard-width);
   height: 100%;
   min-height: 0;
@@ -52,5 +48,4 @@ svg {
   background: #12151b;
   height: 100%;
   width: auto;
-  max-width: 100%;
 }

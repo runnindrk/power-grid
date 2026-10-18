@@ -1,3 +1,9 @@
+#map {
+  cursor: grab;
+}
+#map.panning {
+  cursor: grabbing;
+}
 .connection-line {
   stroke: var(--line);
   stroke-width: 2;

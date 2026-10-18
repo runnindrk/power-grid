@@ -23,6 +23,11 @@
         "stored_title": "{resource} stored",
         "plant_kind": "Plant",
         "special_kind": "Special",
+        "next_card_heading": "Next Card",
+        "back_of_the_card": {
+            "plug": "Plug",
+            "no_plug": "No Plug"
+        },
         "action_labels": {
             "determining_player_order": "Determining Player Order",
             "power_plant_auction": "Power Plant Auction",

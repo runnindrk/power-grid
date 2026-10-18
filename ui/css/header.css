@@ -21,8 +21,16 @@ header h1 {
   font-size: 12px;
   white-space: nowrap;
 }
+.turn-order-player {
+  color: var(--player-color);
+  font-weight: 600;
+}
 .turn-order-player.current {
+  background: var(--player-color);
+  border-radius: 4px;
+  color: var(--bg);
   font-weight: 800;
+  padding: 1px 6px;
 }
 .toolbar-divider {
   height: 24px;
