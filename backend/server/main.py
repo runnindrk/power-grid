@@ -26,6 +26,7 @@ from backend.rules.rules import (
     pass_bid,
     place_bid,
     quote_resources,
+    select_power_plant,
 )
 from backend.server.messages import (
     HOUSE_SPOT_NOT_AVAILABLE,
@@ -40,6 +41,7 @@ from backend.server.messages import (
     PLACEHOLDER_RESOURCE_PRICE,
     PLACEHOLDER_RESOURCE_PURCHASE,
     POWER_PLANT_READY_UPDATED,
+    POWER_PLANT_SELECTED,
     RESOURCE_MOVE_REJECTED,
     RESOURCE_MOVED
 )
@@ -228,6 +230,21 @@ def bid():
         code = place_bid(state, payload.get("player"), payload.get("amount"))
 
     return _result(code, PLACEHOLDER_BID)
+
+
+@app.post("/api/plant/select")
+def select_plant():
+    """Select a power plant from the market during the auction phase."""
+    payload = _payload()
+
+    if not _has_int(payload, ["plant_id"]):
+        return _result(ErrorCode.E_NOT_OKAY, INVALID_POWER_PLANT)
+
+    with GAME_STATE_LOCK:
+        code = select_power_plant(get_game_state(), payload["plant_id"])
+
+    message = POWER_PLANT_SELECTED if code == ErrorCode.E_OK else INVALID_POWER_PLANT
+    return _result(code, message)
 
 
 @app.post("/api/bid/pass")

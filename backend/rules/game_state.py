@@ -30,6 +30,7 @@ class GameState:
     player_power_plants: dict[str, list[dict]]
     map_houses: dict[str, dict[str, str | None]]
     pending_houses: list[dict[str, str]]
+    selected_power_plant: int | None = None
 
     def to_dict(self):
         return asdict(self)

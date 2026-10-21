@@ -10,6 +10,7 @@ ERROR_PREFIX = "HTTP Request: "
 HOUSE_SPOT_UPDATED = "House Spot Updated"
 RESOURCE_MOVED = "Resource Moved"
 POWER_PLANT_READY_UPDATED = "Power Plant Ready State Updated"
+POWER_PLANT_SELECTED = "Power Plant Selected"
 GAME_SAVED = "Game Saved"
 
 # -------------------------------------------------------------------------------------------------

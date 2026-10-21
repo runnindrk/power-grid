@@ -32,12 +32,25 @@
   background: #22262e;
   border: 1px solid #454b56;
   border-radius: 5px;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
 .power-plant-card.special {
   border-color: var(--line-highlight);
 }
 .player-owned-plant {
   border-color: var(--player-color);
+}
+.power-plant-card.selectable {
+  cursor: pointer;
+}
+.power-plant-card.selectable:focus-visible {
+  outline: 2px solid #8bc783;
+  outline-offset: 2px;
+}
+.power-plant-card.selectable:hover,
+.power-plant-card.selected {
+  border: 2px solid #8bc783;
+  box-shadow: inset 0 0 0 1px #8bc783;
 }
 .plant-heading {
   display: flex;

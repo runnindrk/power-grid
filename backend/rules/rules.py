@@ -20,6 +20,15 @@ def place_bid(state: GameState, player, amount):
     return ErrorCode.E_OK
 
 
+def select_power_plant(state: GameState, plant_id):
+    """Select a market plant for the current auction phase."""
+    if state.current_action != "power_plant_auction" or plant_id not in state.power_plant_market:
+        return ErrorCode.E_NOT_OKAY
+
+    state.selected_power_plant = plant_id
+    return ErrorCode.E_OK
+
+
 def pass_bid(state: GameState, player):
     """Placeholder: will record that a player is out of the auction."""
     return ErrorCode.E_OK

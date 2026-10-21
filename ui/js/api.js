@@ -71,6 +71,10 @@ export function postReadyToPower(player, plantId) {
   return postApi('/api/plant/ready-to-power', { player: player, plant_id: plantId });
 }
 
+export function postSelectPowerPlant(plantId) {
+  return postApi('/api/plant/select', { plant_id: plantId });
+}
+
 export function postBid(player, amount) {
   return postApi('/api/bid', { player: player, amount: amount });
 }

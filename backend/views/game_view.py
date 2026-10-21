@@ -97,7 +97,16 @@ def build_view(game_state: GameState):
 
     market_cards = []
     for plant_id in state["power_plant_market"]:
-        market_cards.append(plant_card(config, plant_id, deck.get(plant_id), False))
+        card = plant_card(config, plant_id, deck.get(plant_id), False)
+        card["selectable"] = game_state.current_action == "power_plant_auction"
+        card["selected"] = card["selectable"] and plant_id == game_state.selected_power_plant
+
+        if card["selectable"]:
+            card["classes"].append("selectable")
+        if card["selected"]:
+            card["classes"].append("selected")
+
+        market_cards.append(card)
 
     return {
         "map": build_map_view(config, load_map(), state["map_houses"], players, selected),

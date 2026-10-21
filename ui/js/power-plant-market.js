@@ -1,5 +1,5 @@
 import { htmlElement } from './dom-utils.js';
-import { postReadyToPower } from './api.js';
+import { postReadyToPower, postSelectPowerPlant } from './api.js';
 
 function createFuelDisplay(fuel) {
   const container = htmlElement('div', { className: 'plant-fuels' });
@@ -77,6 +77,22 @@ export function createPlantCard(card, refresh) {
     'data-plant-id': card.plant_id,
     'aria-label': card.aria_label,
   });
+
+  if (card.selectable) {
+    article.setAttribute('role', 'button');
+    article.setAttribute('tabindex', '0');
+    article.setAttribute('aria-pressed', card.selected);
+
+    const select = () => postSelectPowerPlant(card.plant_id).then(refresh);
+    article.addEventListener('click', select);
+    article.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        select();
+      }
+    });
+  }
+
   const heading = htmlElement('div', { className: 'plant-heading' });
 
   heading.append(
