@@ -59,7 +59,7 @@
             "spot_radius": 11,
             "mark_radius": 5.5,
             "city_label_offset": 14,
-            "outline_url": "/game_info/maps/germany/germany_outline.jpg"
+            "outline_url": "/game_info/maps/germany/germany_outline_dark.png"
         }
     }
 }

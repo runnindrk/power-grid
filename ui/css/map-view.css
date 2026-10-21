@@ -58,7 +58,6 @@
 }
 .map-outline {
   opacity: 0.35;
-  filter: invert(1) brightness(0.8);
   pointer-events: none;
 }
 .city-label {
