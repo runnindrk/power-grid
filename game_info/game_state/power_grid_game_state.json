@@ -32,7 +32,7 @@
         "p3",
         "p4"
     ],
-    "current_player": "p1",
+    "current_player": "p2",
     "current_action": "building_houses",
     "player_aliases": {
         "p1": "Diogo",
@@ -51,7 +51,7 @@
             {
                 "plant_id": 5,
                 "resources": {
-                    "coal": 3,
+                    "coal": 4,
                     "oil": 0,
                     "trash": 0,
                     "gas": 0,
@@ -73,7 +73,7 @@
             {
                 "plant_id": 29,
                 "resources": {
-                    "coal": 1,
+                    "coal": 0,
                     "oil": 0,
                     "trash": 0,
                     "gas": 0,

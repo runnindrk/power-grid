@@ -4,7 +4,8 @@ Which JSON file feeds which part of the screen.
 
 ```mermaid
 flowchart LR
-    State[("power_grid_game_state.json")]
+    State["rules/game_state.py: in-memory game state"]
+    Save[("power_grid_game_state.json: written as a save-game snapshot")]
     Settings["power_grid_settings.json"]
     Resources["power_grid_resource_prices.json"]
     Deck["power_grid_deck_set_0.json"]
@@ -29,6 +30,7 @@ flowchart LR
     Money --> Income["Income table"]
     Replen --> Rates["Replenishment table"]
     Map --> Geometry["City positions, connection costs"]
+    State -->|write snapshot| Save
 ```
 
 [Back to index](../README.md)

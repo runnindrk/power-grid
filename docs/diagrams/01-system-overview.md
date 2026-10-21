@@ -15,10 +15,14 @@ flowchart LR
         Views["views/: build the view"]
         Actions["server/game_actions.py: change the state"]
         Rules["rules/: rules and fuel transfer"]
-        Data["data_files.py: read and write JSON"]
+        State["rules/game_state.py: Python-defined in-memory state"]
+        Data["data/files.py: static JSON files"]
         Routes --> Views
         Routes --> Actions
         Routes --> Rules
+        Views --> State
+        Actions --> State
+        State -->|write snapshot| Save
         Views --> Data
         Actions --> Data
         Actions --> Rules
@@ -26,7 +30,7 @@ flowchart LR
     end
 
     subgraph Files["game_info/ (JSON files)"]
-        State[("game_state/power_grid_game_state.json<br/>live game state")]
+        Save[("game_state/power_grid_game_state.json<br/>saved game snapshot")]
         Settings["static_info/power_grid_settings.json<br/>rules, texts, colors"]
         Resources["static_info/power_grid_resource_prices.json<br/>resources, price scales"]
         Deck["static_info/power_grid_deck_set_0.json<br/>power plants"]
@@ -39,7 +43,6 @@ flowchart LR
     API -- "GET /api/view" --> Routes
     API -- "POST /api/..." --> Routes
     Routes -- "static files (ui/, game_info/)" --> UI
-    Data --> State
     Data --> Settings
     Data --> Resources
     Data --> Deck

@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------------------
 # Imports
 
-from backend.data_files import (
+from backend.data.files import (
     load_map,
     load_money,
     load_plant_deck,
@@ -9,6 +9,7 @@ from backend.data_files import (
     load_resources,
     load_settings,
 )
+from backend.rules.game_state import GameState
 from backend.views.map_view import build_map_view
 from backend.views.market_view import money_view, replenishment_view, resource_market_view
 from backend.views.plant_view import plant_card
@@ -76,8 +77,9 @@ def next_card_back_view(config, state):
 # -------------------------------------------------------------------------------------------------
 # Whole page
 
-def build_view(state):
+def build_view(game_state: GameState):
     """Describe everything the UI shows, built from the game state and the static JSON files."""
+    state = game_state.to_dict()
     config = load_config()
     deck = load_plant_deck()
 
@@ -91,7 +93,7 @@ def build_view(state):
 
     player_rows = []
     for player in state["player_turn_order"][:config["rules"]["max_players_on_board"]]:
-        player_rows.append(player_row(config, state, player, deck))
+        player_rows.append(player_row(config, state, player, deck, game_state))
 
     market_cards = []
     for plant_id in state["power_plant_market"]:

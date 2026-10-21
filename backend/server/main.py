@@ -12,7 +12,12 @@ from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 # Must run before the backend imports so the script works when launched directly.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from backend.data_files import PROJECT_ROOT, load_game_state, load_settings
+from backend.data.files import PROJECT_ROOT, load_settings
+from backend.rules.game_state import (
+    GAME_STATE_LOCK,
+    get_game_state,
+    save_game_state,
+)
 from backend.rules.rules import (
     ErrorCode,
     bureaucracy,
@@ -25,6 +30,7 @@ from backend.rules.rules import (
 from backend.server.messages import (
     HOUSE_SPOT_NOT_AVAILABLE,
     HOUSE_SPOT_UPDATED,
+    GAME_SAVED,
     INVALID_POWER_PLANT,
     INVALID_RESOURCE_MOVE,
     PLACEHOLDER_BID,
@@ -103,7 +109,8 @@ def index():
 @app.get("/api/view")
 def view():
     """Return everything the UI shows, built from the game state."""
-    return jsonify(build_view(load_game_state()))
+    with GAME_STATE_LOCK:
+        return jsonify(build_view(get_game_state()))
 
 
 @app.route("/<path:filename>")
@@ -115,6 +122,15 @@ def serve_file(filename):
         abort(404)
 
     return send_from_directory(PROJECT_ROOT / directory, relative_path)
+
+
+@app.post("/api/save-game")
+def save_game():
+    """Persist the current in-memory game state as a save game."""
+    with GAME_STATE_LOCK:
+        save_game_state()
+
+    return _result(ErrorCode.E_OK, GAME_SAVED)
 
 # -------------------------------------------------------------------------------------------------
 # Actions
@@ -137,8 +153,9 @@ def house_spot():
 @app.post("/api/buy-houses")
 def buy_houses_route():
     """Placeholder: buy the selected houses for the current player."""
-    state = load_game_state()
-    code = buy_houses(state["current_player"], state["pending_houses"])
+    with GAME_STATE_LOCK:
+        state = get_game_state()
+        code = buy_houses(state, state.current_player, state.pending_houses)
 
     return _result(code, PLACEHOLDER_HOUSE_PURCHASE)
 
@@ -147,7 +164,8 @@ def buy_houses_route():
 def resource_price():
     """Placeholder: return the price of the resources typed in the buy panel."""
     payload = _payload()
-    price = quote_resources(payload.get("player"), payload.get("resources"))
+    with GAME_STATE_LOCK:
+        price = quote_resources(get_game_state(), payload.get("player"), payload.get("resources"))
     price_label = load_settings()["text"]["price_format"].format(price=price)
 
     return _result(ErrorCode.E_OK, PLACEHOLDER_RESOURCE_PRICE, price_label)
@@ -157,7 +175,9 @@ def resource_price():
 def buy_resources_route():
     """Placeholder: buy the resources typed in the buy panel."""
     payload = _payload()
-    code = buy_resources(payload.get("player"), payload.get("resources"))
+    with GAME_STATE_LOCK:
+        state = get_game_state()
+        code = buy_resources(state, payload.get("player"), payload.get("resources"))
 
     return _result(code, PLACEHOLDER_RESOURCE_PURCHASE)
 
@@ -203,7 +223,9 @@ def ready_to_power():
 def bid():
     """Placeholder: place a bid in the power plant auction."""
     payload = _payload()
-    code = place_bid(payload.get("player"), payload.get("amount"))
+    with GAME_STATE_LOCK:
+        state = get_game_state()
+        code = place_bid(state, payload.get("player"), payload.get("amount"))
 
     return _result(code, PLACEHOLDER_BID)
 
@@ -211,7 +233,9 @@ def bid():
 @app.post("/api/bid/pass")
 def pass_bid_route():
     """Placeholder: pass in the power plant auction."""
-    code = pass_bid(_payload().get("player"))
+    with GAME_STATE_LOCK:
+        state = get_game_state()
+        code = pass_bid(state, _payload().get("player"))
 
     return _result(code, PLACEHOLDER_PASS)
 
@@ -219,7 +243,9 @@ def pass_bid_route():
 @app.post("/api/bureaucracy")
 def run_bureaucracy():
     """Placeholder: run the bureaucracy phase."""
-    code = bureaucracy(load_game_state())
+    with GAME_STATE_LOCK:
+        state = get_game_state()
+        code = bureaucracy(state)
 
     return _result(code, PLACEHOLDER_BUREAUCRACY)
 

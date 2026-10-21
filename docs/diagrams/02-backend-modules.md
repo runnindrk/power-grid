@@ -11,7 +11,8 @@ flowchart TD
     mkt["views/market_view.py<br/>resource market, income, replenishment"]
     pview["views/player_view.py<br/>player rows and controls"]
     plview["views/plant_view.py<br/>plant cards and fuel storage"]
-    data["data_files.py<br/>paths, JSON reading and saving, lock"]
+    data["data/files.py<br/>static JSON paths and reading"]
+    state["rules/game_state.py<br/>Python state and save output"]
     rules["rules/rules.py<br/>placeholder game phases"]
     xfer["rules/resource_transfer.py<br/>storage capacity, moving fuel"]
 
@@ -19,10 +20,13 @@ flowchart TD
     main --> gview
     main --> rules
     main --> data
+    main --> state
 
     actions --> data
+    actions --> state
     actions --> xfer
 
+    state --> data
     gview --> data
     gview --> mview
     gview --> mkt

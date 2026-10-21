@@ -2,6 +2,7 @@
 # Imports
 
 from backend.rules.rules import quote_houses
+from backend.rules.game_state import GameState
 from backend.views.plant_view import owned_plant_card
 
 # -------------------------------------------------------------------------------------------------
@@ -34,7 +35,7 @@ def count_network_houses(state, player):
 # -------------------------------------------------------------------------------------------------
 # Plant slots
 
-def plant_slots(config, state, player, deck):
+def plant_slots(config, state, player, deck, game_state):
     """Return the player's fixed plant slots: their plants first, then empty slots."""
     alias = player_label(state, player)
     owned = state["player_power_plants"][player]
@@ -57,7 +58,7 @@ def plant_slots(config, state, player, deck):
 # -------------------------------------------------------------------------------------------------
 # Player controls
 
-def house_purchase_view(config, state, player):
+def house_purchase_view(config, state, player, game_state):
     """Describe the house buying button: its label, its summary (houses and price) and whether it is disabled."""
     text = config["text"]
     count = len(state["pending_houses"])
@@ -73,7 +74,7 @@ def house_purchase_view(config, state, player):
     elif count == 0:
         result["total"] = text["house_prompt"]
     else:
-        price = quote_houses(player, state["pending_houses"])
+        price = quote_houses(game_state, player, state["pending_houses"])
         result["total"] = text["house_summary"].format(count=count, price=price)
         result["buy_disabled"] = False
 
@@ -122,7 +123,7 @@ def bid_view(config, state, player):
 # -------------------------------------------------------------------------------------------------
 # Player row
 
-def player_row(config, state, player, deck):
+def player_row(config, state, player, deck, game_state: GameState):
     """Describe one row of the player board: money, network, controls and plant slots."""
     alias = player_label(state, player)
     money = state["player_money"][player]
@@ -139,6 +140,6 @@ def player_row(config, state, player, deck):
         "money": {"value": money, "label": config["text"]["money_format"].format(money=money)},
         "bid": bid_view(config, state, player),
         "resource_buy": resource_buy_view(config, state, player),
-        "house_purchase": house_purchase_view(config, state, player),
-        "plant_slots": plant_slots(config, state, player, deck),
+        "house_purchase": house_purchase_view(config, state, player, game_state),
+        "plant_slots": plant_slots(config, state, player, deck, game_state),
     }

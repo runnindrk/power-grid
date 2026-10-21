@@ -1,12 +1,10 @@
 # -------------------------------------------------------------------------------------------------
 # Imports
 
-from backend.data_files import (
+from backend.data.files import load_plant_deck, load_resources
+from backend.rules.game_state import (
     GAME_STATE_LOCK,
-    load_game_state,
-    load_plant_deck,
-    load_resources,
-    save_game_state,
+    get_game_state,
 )
 from backend.rules.resource_transfer import find_player_plant, transfer_plant_resource
 from backend.rules.rules import ErrorCode
@@ -17,19 +15,18 @@ from backend.rules.rules import ErrorCode
 def toggle_house_spot(city, spot):
     """Add or remove a free city spot from the pending houses in the game state."""
     with GAME_STATE_LOCK:
-        state = load_game_state()
-        spots = state["map_houses"].get(city)
+        state = get_game_state()
+        spots = state.map_houses.get(city)
 
         if spots is None or spot not in spots or spots[spot] is not None:
             return ErrorCode.E_NOT_OKAY
 
         selection = {"city": city, "spot": spot}
-        if selection in state["pending_houses"]:
-            state["pending_houses"].remove(selection)
+        if selection in state.pending_houses:
+            state.pending_houses.remove(selection)
         else:
-            state["pending_houses"].append(selection)
+            state.pending_houses.append(selection)
 
-        save_game_state(state)
         return ErrorCode.E_OK
 
 # -------------------------------------------------------------------------------------------------
@@ -38,15 +35,14 @@ def toggle_house_spot(city, spot):
 def toggle_ready_to_power(player, plant_id):
     """Flip the ready-to-power flag on one of the player's plants in the game state."""
     with GAME_STATE_LOCK:
-        state = load_game_state()
+        state = get_game_state()
         plant = find_player_plant(state, player, plant_id)
 
         if plant is None:
             return ErrorCode.E_NOT_OKAY
 
-        plant["ready_to_power"] = not plant["ready_to_power"]
+        plant.ready_to_power = not plant.ready_to_power
 
-        save_game_state(state)
         return ErrorCode.E_OK
 
 # -------------------------------------------------------------------------------------------------
@@ -55,14 +51,11 @@ def toggle_ready_to_power(player, plant_id):
 def transfer_resource(player, source_plant_id, source_slot, target_plant_id, target_slot):
     """Move one fuel unit between two of the player's plants and save the game state if the move is valid."""
     with GAME_STATE_LOCK:
-        state = load_game_state()
+        state = get_game_state()
 
         result = transfer_plant_resource(
             state, player, source_plant_id, source_slot, target_plant_id, target_slot,
             load_plant_deck(), load_resources()["resources"],
         )
-
-        if result == ErrorCode.E_OK:
-            save_game_state(state)
 
         return result

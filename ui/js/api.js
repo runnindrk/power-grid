@@ -16,6 +16,10 @@ export async function fetchView() {
   return response.json();
 }
 
+export function postSaveGame() {
+  return postApi('/api/save-game', {});
+}
+
 async function postApi(url, payload) {
   showStatus('pending', 'Sending…');
 

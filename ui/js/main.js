@@ -1,4 +1,4 @@
-import { fetchView } from './api.js';
+import { fetchView, postSaveGame } from './api.js';
 import { renderHeader } from './game-header.js';
 import { renderMap } from './map-view.js';
 import { initMapPanZoom } from './map-pan-zoom.js';
@@ -32,6 +32,13 @@ async function refresh() {
 
 async function init() {
   initPlantResourceDragAndDrop(document.getElementById('player-board'), refresh);
+
+  const saveButton = document.getElementById('save-game');
+  saveButton.addEventListener('click', async () => {
+    saveButton.disabled = true;
+    await postSaveGame();
+    saveButton.disabled = false;
+  });
 
   await refresh();
 

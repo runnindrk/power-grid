@@ -39,7 +39,7 @@ def stored_resources(plant):
 
 def find_player_plant(state, player, plant_id):
     """Return the player's plant with the given id, or None if they don't own it."""
-    for plant in state["player_power_plants"].get(player, []):
+    for plant in state.player_power_plants.get(player, []):
         if plant["plant_id"] == plant_id:
             return plant
 
