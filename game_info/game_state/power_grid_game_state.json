@@ -10,16 +10,15 @@
     "step": 1,
     "phase": 1,
     "power_plant_market": [
-        3,
         4,
         6,
         7,
+        8,
         9,
-        12,
-        13,
-        15
+        10,
+        11,
+        12
     ],
-    "back_of_the_next_card": "plug",
     "resource_market": {
         "coal": 24,
         "oil": 18,
@@ -47,65 +46,8 @@
         "p4": 50
     },
     "player_power_plants": {
-        "p1": [
-            {
-                "plant_id": 5,
-                "resources": {
-                    "coal": 4,
-                    "oil": 0,
-                    "trash": 0,
-                    "gas": 0,
-                    "uranium": 0
-                },
-                "ready_to_power": false
-            },
-            {
-                "plant_id": 8,
-                "resources": {
-                    "coal": 2,
-                    "oil": 1,
-                    "trash": 0,
-                    "gas": 0,
-                    "uranium": 0
-                },
-                "ready_to_power": false
-            },
-            {
-                "plant_id": 29,
-                "resources": {
-                    "coal": 0,
-                    "oil": 0,
-                    "trash": 0,
-                    "gas": 0,
-                    "uranium": 0
-                },
-                "ready_to_power": false
-            }
-        ],
-        "p2": [
-            {
-                "plant_id": 31,
-                "resources": {
-                    "coal": 0,
-                    "oil": 0,
-                    "trash": 0,
-                    "gas": 0,
-                    "uranium": 0
-                },
-                "ready_to_power": false
-            },
-            {
-                "plant_id": 46,
-                "resources": {
-                    "coal": 0,
-                    "oil": 0,
-                    "trash": 0,
-                    "gas": 0,
-                    "uranium": 0
-                },
-                "ready_to_power": false
-            }
-        ],
+        "p1": [],
+        "p2": [],
         "p3": [],
         "p4": []
     },
@@ -322,5 +264,41 @@
         }
     },
     "pending_houses": [],
-    "selected_power_plant": null
+    "selected_power_plant": null,
+    "power_plant_deck": [
+        14,
+        44,
+        38,
+        29,
+        30,
+        42,
+        5,
+        35,
+        17,
+        40,
+        18,
+        3,
+        15,
+        28,
+        34,
+        33,
+        26,
+        50,
+        37,
+        24,
+        16,
+        20,
+        21,
+        27,
+        13,
+        23,
+        32,
+        31,
+        39,
+        22,
+        36,
+        46,
+        25,
+        19
+    ]
 }

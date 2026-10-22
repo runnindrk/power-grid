@@ -1,0 +1,1 @@
+"""Resource market purchase rules."""

@@ -11,6 +11,7 @@ HOUSE_SPOT_UPDATED = "House Spot Updated"
 RESOURCE_MOVED = "Resource Moved"
 POWER_PLANT_READY_UPDATED = "Power Plant Ready State Updated"
 POWER_PLANT_SELECTED = "Power Plant Selected"
+POWER_PLANT_DISCARDED = "Power Plant Discarded"
 GAME_SAVED = "Game Saved"
 
 # -------------------------------------------------------------------------------------------------

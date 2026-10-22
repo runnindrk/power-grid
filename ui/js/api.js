@@ -45,8 +45,8 @@ export function postHouseSpot(city, spot) {
   return postApi('/api/house-spot', { city: city, spot: spot });
 }
 
-export function postBuyHouses() {
-  return postApi('/api/buy-houses', {});
+export function postBuyHouses(player) {
+  return postApi('/api/buy-houses', { player: player });
 }
 
 export function postResourcePrice(player, resources) {
@@ -75,6 +75,10 @@ export function postSelectPowerPlant(plantId) {
   return postApi('/api/plant/select', { plant_id: plantId });
 }
 
+export function postDiscardPowerPlant(player, plantId) {
+  return postApi('/api/plant/discard', { player: player, plant_id: plantId });
+}
+
 export function postBid(player, amount) {
   return postApi('/api/bid', { player: player, amount: amount });
 }
@@ -83,6 +87,6 @@ export function postPassBid(player) {
   return postApi('/api/bid/pass', { player: player });
 }
 
-export function postBureaucracy() {
-  return postApi('/api/bureaucracy', {});
+export function postBureaucracy(player) {
+  return postApi('/api/bureaucracy', { player: player });
 }

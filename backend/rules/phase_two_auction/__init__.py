@@ -1,0 +1,1 @@
+"""Power plant auction and turn rotation rules."""

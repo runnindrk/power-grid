@@ -1,11 +1,14 @@
 import { htmlElement } from './dom-utils.js';
-import { postReadyToPower, postSelectPowerPlant } from './api.js';
+import { postDiscardPowerPlant, postReadyToPower, postSelectPowerPlant } from './api.js';
 
 function createFuelDisplay(fuel) {
   const container = htmlElement('div', { className: 'plant-fuels' });
 
   if (fuel.empty_label) {
-    container.appendChild(htmlElement('span', { className: 'plant-no-fuel', textContent: fuel.empty_label }));
+    container.appendChild(htmlElement('span', {
+      className: 'plant-no-fuel',
+      textContent: fuel.empty_label,
+    }));
     return container;
   }
 
@@ -34,9 +37,12 @@ function createFuelDisplay(fuel) {
   return container;
 }
 
-// Each storage slot carries, as text, the data the drag and drop needs to tell the backend what moved.
+// Storage metadata identifies the plant and slots involved in a drag-and-drop move.
 function createPlantStorage(storage) {
-  const element = htmlElement('div', { className: 'plant-storage', 'aria-label': storage.aria_label });
+  const element = htmlElement('div', {
+    className: 'plant-storage',
+    'aria-label': storage.aria_label,
+  });
 
   for (const slot of storage.slots) {
     const slotElement = htmlElement('span', {
@@ -71,6 +77,38 @@ function createReadyToPowerButton(ready, refresh) {
   return button;
 }
 
+// Market selection and replacement share one accessible card interaction.
+function makePlantCardInteractive(article, card, refresh) {
+  if (!card.selectable && !card.discardable) {
+    return;
+  }
+
+  const discarding = card.discardable;
+  const activate = discarding
+    ? () => postDiscardPowerPlant(card.discard_player, card.plant_id).then(refresh)
+    : () => postSelectPowerPlant(card.plant_id).then(refresh);
+
+  article.setAttribute('role', 'button');
+  article.setAttribute('tabindex', '0');
+  article.setAttribute('aria-pressed', discarding ? 'false' : card.selected);
+
+  if (discarding) {
+    article.setAttribute('aria-label', 'Discard power plant ' + card.plant_id);
+  }
+
+  article.addEventListener('click', (event) => {
+    if (!event.target.closest('button, .plant-storage-slot')) {
+      activate();
+    }
+  });
+  article.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activate();
+    }
+  });
+}
+
 export function createPlantCard(card, refresh) {
   const article = htmlElement('article', {
     className: card.classes,
@@ -78,20 +116,7 @@ export function createPlantCard(card, refresh) {
     'aria-label': card.aria_label,
   });
 
-  if (card.selectable) {
-    article.setAttribute('role', 'button');
-    article.setAttribute('tabindex', '0');
-    article.setAttribute('aria-pressed', card.selected);
-
-    const select = () => postSelectPowerPlant(card.plant_id).then(refresh);
-    article.addEventListener('click', select);
-    article.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        select();
-      }
-    });
-  }
+  makePlantCardInteractive(article, card, refresh);
 
   const heading = htmlElement('div', { className: 'plant-heading' });
 
@@ -102,7 +127,10 @@ export function createPlantCard(card, refresh) {
   article.appendChild(heading);
 
   if (card.unavailable) {
-    article.appendChild(htmlElement('p', { className: 'plant-unavailable', textContent: 'Details unavailable' }));
+    article.appendChild(htmlElement('p', {
+      className: 'plant-unavailable',
+      textContent: 'Details unavailable',
+    }));
     return article;
   }
 
@@ -114,7 +142,7 @@ export function createPlantCard(card, refresh) {
     htmlElement('span', { className: 'output-label', textContent: 'cities' }),
   );
 
-  if (card.ready_to_power) {
+  if (card.ready_to_power && !card.discardable) {
     output.appendChild(createReadyToPowerButton(card.ready_to_power, refresh));
   }
   article.appendChild(output);

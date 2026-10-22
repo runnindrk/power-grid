@@ -9,7 +9,8 @@ from backend.data.files import (
     load_resources,
     load_settings,
 )
-from backend.rules.game_state import GameState
+from backend.rules.common.game_state import GameState
+from backend.rules.common.phase_state import phase_key
 from backend.views.map_view import build_map_view
 from backend.views.market_view import money_view, replenishment_view, resource_market_view
 from backend.views.plant_view import plant_card
@@ -34,9 +35,12 @@ def load_config():
 # -------------------------------------------------------------------------------------------------
 # Header
 
-def header_view(config, state):
+def header_view(config, state, game_state):
     """Describe the header: the turn order and what the current player is doing."""
     current = state["current_player"]
+    phase = phase_key(game_state.current_action)
+    finished_players = set(game_state.phase_finished_players.get(phase, []))
+
     turn_order = []
 
     for player in state["player_turn_order"]:
@@ -44,11 +48,14 @@ def header_view(config, state):
 
         if player == current:
             classes.append("current")
+        if player in finished_players:
+            classes.append("finished")
 
         turn_order.append({
             "label": player_label(state, player),
             "color": player_color(config, state, player),
             "current": player == current,
+            "finished": "finished" in classes,
             "classes": classes,
         })
 
@@ -63,15 +70,20 @@ def header_view(config, state):
 # -------------------------------------------------------------------------------------------------
 # Next card back
 
-def next_card_back_view(config, state):
-    """Describe the back of the next power plant card: its heading, its label and its back type."""
-    back = state["back_of_the_next_card"]
+def next_card_back_view(config, back):
+    """Describe the back of the top draw-pile card, if one remains."""
     text = config["text"]
+    classes = ["info-card", "next-card-back"]
+    label = ""
+
+    if back is not None:
+        classes.append(back)
+        label = text["back_of_the_card"][back]
 
     return {
         "heading": text["next_card_heading"],
-        "classes": ["info-card", "next-card-back", back],
-        "label": text["back_of_the_card"][back],
+        "classes": classes,
+        "label": label,
     }
 
 # -------------------------------------------------------------------------------------------------
@@ -98,8 +110,13 @@ def build_view(game_state: GameState):
     market_cards = []
     for plant_id in state["power_plant_market"]:
         card = plant_card(config, plant_id, deck.get(plant_id), False)
-        card["selectable"] = game_state.current_action == "power_plant_auction"
-        card["selected"] = card["selectable"] and plant_id == game_state.selected_power_plant
+        card["selectable"] = (
+            game_state.current_action == "power_plant_auction"
+            and game_state.current_player not in game_state.players_bought_power_plant
+            and game_state.current_player not in game_state.auction_skipped
+            and game_state.player_money[game_state.current_player] >= plant_id
+        )
+        card["selected"] = plant_id == game_state.selected_power_plant
 
         if card["selectable"]:
             card["classes"].append("selectable")
@@ -108,13 +125,16 @@ def build_view(game_state: GameState):
 
         market_cards.append(card)
 
+    next_plant = deck.get(game_state.power_plant_deck[0]) if game_state.power_plant_deck else None
+    next_card_back = next_plant["back_of_the_card"] if next_plant else None
+
     return {
         "map": build_map_view(config, load_map(), state["map_houses"], players, selected),
-        "header": header_view(config, state),
+        "header": header_view(config, state, game_state),
         "players": player_rows,
         "power_plant_market": market_cards,
         "resource_market": resource_market_view(config, state),
-        "next_card_back": next_card_back_view(config, state),
+        "next_card_back": next_card_back_view(config, next_card_back),
         "money": money_view(load_money()),
         "replenishment": replenishment_view(config, state, load_replenishment()),
     }

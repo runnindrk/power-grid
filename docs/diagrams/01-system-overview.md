@@ -13,19 +13,23 @@ flowchart LR
     subgraph Server["Flask server (backend/server/main.py)"]
         Routes["Routes: GET /api/view, POST actions"]
         Views["views/: build the view"]
-        Actions["server/game_actions.py: change the state"]
-        Rules["rules/: rules and fuel transfer"]
-        State["rules/game_state.py: Python-defined in-memory state"]
+        Service["application/game_service.py: coordinate commands and state"]
+        Rules["rules/phase_*/ and rules/common/"]
+        State["rules/common/game_state.py: Python-defined in-memory state"]
+        PhaseState["rules/common/phase_state.py: phase completion markers"]
         Data["data/files.py: static JSON files"]
+        SaveData["data/game_state_store.py: load and save"]
         Routes --> Views
-        Routes --> Actions
-        Routes --> Rules
+        Routes --> Service
         Views --> State
-        Actions --> State
-        State -->|write snapshot| Save
+        Views --> PhaseState
+        Service --> State
+        Service --> PhaseState
+        Service --> Rules
+        Service --> Data
+        Service --> SaveData
+        SaveData --> Save
         Views --> Data
-        Actions --> Data
-        Actions --> Rules
         Views --> Rules
     end
 
@@ -37,7 +41,7 @@ flowchart LR
         Money["static_info/power_grid_money.json"]
         Replen["static_info/power_grid_replenishment.json"]
         Map["maps/germany/power_grid_germany_map.json<br/>cities, connections"]
-        Outline["maps/germany/germany_outline.jpg"]
+        Outline["maps/germany/germany_outline_dark.png"]
     end
 
     API -- "GET /api/view" --> Routes
@@ -52,4 +56,4 @@ flowchart LR
     UI -. "image" .-> Outline
 ```
 
-[Back to index](../README.md)
+[Back to documentation](../index.md)

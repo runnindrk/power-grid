@@ -3,11 +3,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-import json
-from threading import RLock
-
-from backend.data.files import GAME_STATE_PATH, read_json
+from dataclasses import asdict, dataclass, field
 
 # -------------------------------------------------------------------------------------------------
 # Game state
@@ -20,7 +16,7 @@ class GameState:
     step: int
     phase: int
     power_plant_market: list[int]
-    back_of_the_next_card: str
+    power_plant_deck: list[int]
     resource_market: dict[str, int]
     player_turn_order: list[str]
     current_player: str
@@ -30,28 +26,19 @@ class GameState:
     player_power_plants: dict[str, list[dict]]
     map_houses: dict[str, dict[str, str | None]]
     pending_houses: list[dict[str, str]]
+
+    # These fields let an in-progress auction resume from a saved game.
+    auction_starter: str | None = None
     selected_power_plant: int | None = None
+    auction_participants: list[str] = field(default_factory=list)
+    auction_bids: dict[str, int] = field(default_factory=dict)
+    auction_passed: list[str] = field(default_factory=list)
+    auction_skipped: list[str] = field(default_factory=list)
+    players_bought_power_plant: list[str] = field(default_factory=list)
+    phase_finished_players: dict[str, list[str]] = field(default_factory=dict)
+
+    # Set while a winner chooses which existing plant to discard.
+    pending_plant_replacement: dict | None = None
 
     def to_dict(self):
         return asdict(self)
-
-
-def load_game_state():
-    """Load the saved game into the Python state structure."""
-    return GameState(**read_json(GAME_STATE_PATH))
-
-
-GAME_STATE_LOCK = RLock()
-GAME_STATE = load_game_state()
-
-
-def get_game_state():
-    return GAME_STATE
-
-
-def save_game_state():
-    with GAME_STATE_LOCK:
-        temporary_path = GAME_STATE_PATH.with_suffix(".json.tmp")
-        text = json.dumps(GAME_STATE.to_dict(), ensure_ascii=False, indent=4) + "\n"
-        temporary_path.write_text(text, encoding="utf-8")
-        temporary_path.replace(GAME_STATE_PATH)

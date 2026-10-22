@@ -11,7 +11,10 @@ function createPlantSlot(slot, refresh) {
 
   const element = htmlElement('div', { className: slot.classes, 'aria-label': slot.aria_label });
 
-  element.appendChild(htmlElement('span', { className: 'empty-slot-label', textContent: slot.label }));
+  element.appendChild(htmlElement('span', {
+    className: 'empty-slot-label',
+    textContent: slot.label,
+  }));
 
   return element;
 }
@@ -26,21 +29,32 @@ function createHousePurchaseButton(player, refresh) {
 
   button.append(
     htmlElement('span', { className: 'house-button-label', textContent: purchase.label }),
-    htmlElement('span', { className: 'house-button-total', 'aria-live': 'polite', textContent: purchase.total }),
+    htmlElement('span', {
+      className: 'house-button-total',
+      'aria-live': 'polite',
+      textContent: purchase.total,
+    }),
   );
   button.disabled = purchase.buy_disabled;
   button.addEventListener('click', () => {
-    postBuyHouses().then(refresh);
+    // Include the row's player ID so the server can validate the active turn.
+    postBuyHouses(player.player).then(refresh);
   });
 
   return button;
 }
 
-function createPowerButton(refresh) {
-  const button = htmlElement('button', { className: 'player-power-button', type: 'button', textContent: 'Power' });
+function createPowerButton(player, refresh) {
+  const button = htmlElement('button', {
+    className: 'player-power-button',
+    type: 'button',
+    textContent: 'Power',
+  });
+  button.disabled = !player.is_current_player;
 
   button.addEventListener('click', () => {
-    postBureaucracy().then(refresh);
+    // The server advances only when this player owns the current turn.
+    postBureaucracy(player.player).then(refresh);
   });
 
   return button;
@@ -73,7 +87,7 @@ function createPlayerInfo(player, refresh) {
   pair.append(
     createResourceBuyPanel(player, refresh),
     createHousePurchaseButton(player, refresh),
-    createPowerButton(refresh),
+    createPowerButton(player, refresh),
   );
   actions.append(
     createBidPanel(player, refresh),

@@ -12,26 +12,14 @@ from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 # Must run before the backend imports so the script works when launched directly.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
+from backend.application.game_service import GameService
 from backend.data.files import PROJECT_ROOT, load_settings
-from backend.rules.game_state import (
-    GAME_STATE_LOCK,
-    get_game_state,
-    save_game_state,
-)
-from backend.rules.rules import (
-    ErrorCode,
-    bureaucracy,
-    buy_houses,
-    buy_resources,
-    pass_bid,
-    place_bid,
-    quote_resources,
-    select_power_plant,
-)
+from backend.data.game_state_store import load_game_state, save_game_state
+from backend.rules.common.error_codes import ErrorCode
 from backend.server.messages import (
+    GAME_SAVED,
     HOUSE_SPOT_NOT_AVAILABLE,
     HOUSE_SPOT_UPDATED,
-    GAME_SAVED,
     INVALID_POWER_PLANT,
     INVALID_RESOURCE_MOVE,
     PLACEHOLDER_BID,
@@ -40,23 +28,32 @@ from backend.server.messages import (
     PLACEHOLDER_PASS,
     PLACEHOLDER_RESOURCE_PRICE,
     PLACEHOLDER_RESOURCE_PURCHASE,
+    POWER_PLANT_DISCARDED,
     POWER_PLANT_READY_UPDATED,
     POWER_PLANT_SELECTED,
     RESOURCE_MOVE_REJECTED,
-    RESOURCE_MOVED
+    RESOURCE_MOVED,
 )
-from backend.server.game_actions import toggle_house_spot, toggle_ready_to_power, transfer_resource
 from backend.views.game_view import build_view
 
 PUBLIC_DIRECTORIES = ["ui", "game_info"]
 
 app = Flask(__name__)
+app.config["game_service"] = GameService(
+    load_game_state(),
+    save_game_state,
+    load_settings()["rules"]["plant_slots_per_player"],
+)
+
+
+def _game_service():
+    return app.config["game_service"]
 
 # -------------------------------------------------------------------------------------------------
 # Helpers
 
 def _payload():
-    """Return the JSON body of the request as a dict, or an empty dict if it is missing or invalid."""
+    """Return the request JSON object, or an empty dict if it is missing or invalid."""
     payload = request.get_json(silent=True)
 
     if isinstance(payload, dict):
@@ -74,7 +71,7 @@ def _has_text(payload, names):
 
 
 def _has_int(payload, names):
-    """Return True if every named field of the payload is an integer (True and False don't count)."""
+    """Return True if every field is an integer; booleans do not count as integers."""
     for name in names:
         value = payload.get(name)
 
@@ -111,8 +108,7 @@ def index():
 @app.get("/api/view")
 def view():
     """Return everything the UI shows, built from the game state."""
-    with GAME_STATE_LOCK:
-        return jsonify(build_view(get_game_state()))
+    return jsonify(build_view(_game_service().snapshot()))
 
 
 @app.route("/<path:filename>")
@@ -129,8 +125,7 @@ def serve_file(filename):
 @app.post("/api/save-game")
 def save_game():
     """Persist the current in-memory game state as a save game."""
-    with GAME_STATE_LOCK:
-        save_game_state()
+    _game_service().save_game()
 
     return _result(ErrorCode.E_OK, GAME_SAVED)
 
@@ -145,7 +140,7 @@ def house_spot():
     if not _has_text(payload, ["city", "spot"]):
         return _result(ErrorCode.E_NOT_OKAY, HOUSE_SPOT_NOT_AVAILABLE)
 
-    code = toggle_house_spot(payload["city"], payload["spot"])
+    code = _game_service().toggle_house_spot(payload["city"], payload["spot"])
 
     if code != ErrorCode.E_OK:
         return _result(code, HOUSE_SPOT_NOT_AVAILABLE)
@@ -155,9 +150,7 @@ def house_spot():
 @app.post("/api/buy-houses")
 def buy_houses_route():
     """Placeholder: buy the selected houses for the current player."""
-    with GAME_STATE_LOCK:
-        state = get_game_state()
-        code = buy_houses(state, state.current_player, state.pending_houses)
+    code = _game_service().buy_houses(_payload().get("player"))
 
     return _result(code, PLACEHOLDER_HOUSE_PURCHASE)
 
@@ -166,8 +159,7 @@ def buy_houses_route():
 def resource_price():
     """Placeholder: return the price of the resources typed in the buy panel."""
     payload = _payload()
-    with GAME_STATE_LOCK:
-        price = quote_resources(get_game_state(), payload.get("player"), payload.get("resources"))
+    price = _game_service().quote_resources(payload.get("player"), payload.get("resources"))
     price_label = load_settings()["text"]["price_format"].format(price=price)
 
     return _result(ErrorCode.E_OK, PLACEHOLDER_RESOURCE_PRICE, price_label)
@@ -177,9 +169,7 @@ def resource_price():
 def buy_resources_route():
     """Placeholder: buy the resources typed in the buy panel."""
     payload = _payload()
-    with GAME_STATE_LOCK:
-        state = get_game_state()
-        code = buy_resources(state, payload.get("player"), payload.get("resources"))
+    code = _game_service().buy_resources(payload.get("player"), payload.get("resources"))
 
     return _result(code, PLACEHOLDER_RESOURCE_PURCHASE)
 
@@ -193,7 +183,7 @@ def transfer_plant_resource():
     if not _has_text(payload, ["player"]) or not _has_int(payload, int_names):
         return _result(ErrorCode.E_NOT_OKAY, INVALID_RESOURCE_MOVE)
 
-    code = transfer_resource(
+    code = _game_service().transfer_resource(
         payload["player"],
         payload["source_plant_id"],
         payload["source_slot"],
@@ -214,7 +204,7 @@ def ready_to_power():
     if not _has_text(payload, ["player"]) or not _has_int(payload, ["plant_id"]):
         return _result(ErrorCode.E_NOT_OKAY, INVALID_POWER_PLANT)
 
-    code = toggle_ready_to_power(payload["player"], payload["plant_id"])
+    code = _game_service().toggle_ready_to_power(payload["player"], payload["plant_id"])
 
     if code != ErrorCode.E_OK:
         return _result(code, INVALID_POWER_PLANT)
@@ -225,9 +215,10 @@ def ready_to_power():
 def bid():
     """Placeholder: place a bid in the power plant auction."""
     payload = _payload()
-    with GAME_STATE_LOCK:
-        state = get_game_state()
-        code = place_bid(state, payload.get("player"), payload.get("amount"))
+    if not _has_int(payload, ["amount"]):
+        return _result(ErrorCode.E_NOT_OKAY, PLACEHOLDER_BID)
+
+    code = _game_service().place_bid(payload.get("player"), payload.get("amount"))
 
     return _result(code, PLACEHOLDER_BID)
 
@@ -240,19 +231,32 @@ def select_plant():
     if not _has_int(payload, ["plant_id"]):
         return _result(ErrorCode.E_NOT_OKAY, INVALID_POWER_PLANT)
 
-    with GAME_STATE_LOCK:
-        code = select_power_plant(get_game_state(), payload["plant_id"])
+    code = _game_service().select_power_plant(payload["plant_id"])
 
     message = POWER_PLANT_SELECTED if code == ErrorCode.E_OK else INVALID_POWER_PLANT
+    return _result(code, message)
+
+
+@app.post("/api/plant/discard")
+def discard_plant():
+    """Discard an owned plant to complete a plant purchase replacement."""
+    payload = _payload()
+
+    if not _has_text(payload, ["player"]) or not _has_int(payload, ["plant_id"]):
+        return _result(ErrorCode.E_NOT_OKAY, INVALID_POWER_PLANT)
+
+    code = _game_service().discard_power_plant(
+        payload["player"],
+        payload["plant_id"],
+    )
+    message = POWER_PLANT_DISCARDED if code == ErrorCode.E_OK else INVALID_POWER_PLANT
     return _result(code, message)
 
 
 @app.post("/api/bid/pass")
 def pass_bid_route():
     """Placeholder: pass in the power plant auction."""
-    with GAME_STATE_LOCK:
-        state = get_game_state()
-        code = pass_bid(state, _payload().get("player"))
+    code = _game_service().pass_bid(_payload().get("player"))
 
     return _result(code, PLACEHOLDER_PASS)
 
@@ -260,9 +264,7 @@ def pass_bid_route():
 @app.post("/api/bureaucracy")
 def run_bureaucracy():
     """Placeholder: run the bureaucracy phase."""
-    with GAME_STATE_LOCK:
-        state = get_game_state()
-        code = bureaucracy(state)
+    code = _game_service().bureaucracy(_payload().get("player"))
 
     return _result(code, PLACEHOLDER_BUREAUCRACY)
 

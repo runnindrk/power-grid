@@ -33,4 +33,4 @@ sequenceDiagram
     Page->>Page: redraw every section
 ```
 
-[Back to index](../README.md)
+[Back to documentation](../index.md)

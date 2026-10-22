@@ -1,8 +1,9 @@
 # -------------------------------------------------------------------------------------------------
 # Imports
 
-from backend.rules.rules import quote_houses
-from backend.rules.game_state import GameState
+from backend.rules.common.game_state import GameState
+from backend.rules.phase_four_building_houses.building_houses import quote_houses
+from backend.rules.phase_two_auction.auction import highest_active_bid
 from backend.views.plant_view import owned_plant_card
 
 # -------------------------------------------------------------------------------------------------
@@ -44,7 +45,15 @@ def plant_slots(config, state, player, deck, game_state):
     for slot_index in range(config["rules"]["plant_slots_per_player"]):
         if slot_index < len(owned):
             plant = owned[slot_index]
-            slots.append(owned_plant_card(config, deck.get(plant["plant_id"]), player, plant))
+            card = owned_plant_card(config, deck.get(plant["plant_id"]), player, plant)
+            card["discardable"] = (
+                game_state.current_action == "discard_power_plant"
+                and game_state.current_player == player
+            )
+            if card["discardable"]:
+                card["classes"].append("discardable")
+                card["discard_player"] = player
+            slots.append(card)
         else:
             slots.append({
                 "empty": True,
@@ -59,7 +68,7 @@ def plant_slots(config, state, player, deck, game_state):
 # Player controls
 
 def house_purchase_view(config, state, player, game_state):
-    """Describe the house buying button: its label, its summary (houses and price) and whether it is disabled."""
+    """Describe the house-buying button, its price summary, and disabled state."""
     text = config["text"]
     count = len(state["pending_houses"])
 
@@ -102,20 +111,28 @@ def resource_buy_view(config, state, player):
         "aria_label": f"Buy resources for {alias}",
         "buy_aria_label": f"Buy selected resources for {alias}",
         "price_label": config["text"]["price_format"].format(price=0),
+        "disabled": player != state["current_player"],
         "rows": rows,
     }
 
 
-def bid_view(config, state, player):
+def bid_view(config, state, player, game_state):
     """Describe the auction bid panel of a player."""
     alias = player_label(state, player)
+    bidding = game_state.current_action == "power_plant_bidding"
+    highest_bid = highest_active_bid(game_state)
+    minimum_bid = highest_bid + 1 if bidding else config["rules"]["min_bid"]
 
     return {
-        "min": config["rules"]["min_bid"],
+        "min": minimum_bid,
         "max": state["player_money"][player],
-        "value": config["rules"]["min_bid"],
-        "status": config["text"]["no_bid_yet"],
-        "disabled": False,
+        "value": minimum_bid,
+        "status": f"Highest bid: {highest_bid}" if highest_bid else config["text"]["no_bid_yet"],
+        "disabled": player != state["current_player"] or not bidding,
+        "pass_disabled": (
+            player != state["current_player"]
+            or game_state.current_action not in ("power_plant_auction", "power_plant_bidding")
+        ),
         "aria_label": f"Power plant bid for {alias}",
         "input_aria_label": f"Bid amount for {alias}",
     }
@@ -130,6 +147,7 @@ def player_row(config, state, player, deck, game_state: GameState):
 
     return {
         "player": player,
+        "is_current_player": player == state["current_player"],
         "label": alias,
         "aria_label": f"Player {alias}",
         "color": player_color(config, state, player),
@@ -138,7 +156,7 @@ def player_row(config, state, player, deck, game_state: GameState):
             "label": config["text"]["in_network"],
         },
         "money": {"value": money, "label": config["text"]["money_format"].format(money=money)},
-        "bid": bid_view(config, state, player),
+        "bid": bid_view(config, state, player, game_state),
         "resource_buy": resource_buy_view(config, state, player),
         "house_purchase": house_purchase_view(config, state, player, game_state),
         "plant_slots": plant_slots(config, state, player, deck, game_state),

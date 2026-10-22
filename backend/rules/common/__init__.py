@@ -1,0 +1,1 @@
+"""Shared rule state, result codes, and game helpers."""

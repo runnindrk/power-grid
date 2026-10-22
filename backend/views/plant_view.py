@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------------------
 # Imports
 
-from backend.rules.resource_transfer import storage_capacity, stored_resources
+from backend.rules.common.resource_transfer import storage_capacity, stored_resources
 
 # -------------------------------------------------------------------------------------------------
 # Fuel

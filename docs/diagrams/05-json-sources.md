@@ -33,4 +33,4 @@ flowchart LR
     State -->|write snapshot| Save
 ```
 
-[Back to index](../README.md)
+[Back to documentation](../index.md)

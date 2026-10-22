@@ -1,7 +1,7 @@
 # -------------------------------------------------------------------------------------------------
 # Imports
 
-from backend.rules.rules import ErrorCode
+from backend.rules.common.error_codes import ErrorCode
 
 # -------------------------------------------------------------------------------------------------
 # Storage capacity

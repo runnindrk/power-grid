@@ -3,7 +3,10 @@ import { postBuyResources, postResourcePrice } from './api.js';
 
 export function createResourceBuyPanel(player, refresh) {
   const buy = player.resource_buy;
-  const panel = htmlElement('form', { className: 'player-resource-buy-panel', 'aria-label': buy.aria_label });
+  const panel = htmlElement('form', {
+    className: 'player-resource-buy-panel',
+    'aria-label': buy.aria_label,
+  });
 
   const inputs = {};
   const options = htmlElement('div', { className: 'resource-buy-options' });
@@ -15,27 +18,39 @@ export function createResourceBuyPanel(player, refresh) {
       value: '0',
       'aria-label': row.aria_label,
     });
+    input.disabled = buy.disabled;
     const label = htmlElement('label', { className: row.classes });
 
     label.append(
-      htmlElement('span', { className: 'resource-buy-icon', title: row.label, textContent: row.icon }),
+      htmlElement('span', {
+        className: 'resource-buy-icon',
+        title: row.label,
+        textContent: row.icon,
+      }),
       input,
     );
     options.appendChild(label);
     inputs[row.resource] = input;
   }
 
-  const total = htmlElement('span', { className: 'resource-buy-total', textContent: buy.price_label });
+  const total = htmlElement('span', {
+    className: 'resource-buy-total',
+    textContent: buy.price_label,
+  });
   const buyButton = htmlElement('button', {
     className: 'resource-buy-button',
     type: 'submit',
     'aria-label': buy.buy_aria_label,
   });
 
-  buyButton.append(htmlElement('span', { className: 'resource-buy-label', textContent: 'Buy' }), total);
+  buyButton.append(
+    htmlElement('span', { className: 'resource-buy-label', textContent: 'Buy' }),
+    total,
+  );
+  buyButton.disabled = buy.disabled;
   panel.append(options, buyButton);
 
-  // The typed amounts are sent as they are; the backend decides what they mean.
+  // Keep entered values intact; the backend owns purchase validation and parsing.
   function typedQuantities() {
     const quantities = {};
 

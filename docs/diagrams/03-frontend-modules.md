@@ -8,7 +8,7 @@ flowchart TD
     api["api.js<br/>fetchView and POST helpers"]
     dom["dom-utils.js<br/>el and htmlElement"]
 
-    header["game-header.js"]
+    header["game-header.js<br/>turn order and phase-completion marks"]
     map["map-view.js<br/>cities, lines, spots, tooltip"]
     board["player-board.js<br/>player rows"]
     bid["bid-panel.js"]
@@ -51,4 +51,4 @@ flowchart TD
     repl --> dom
 ```
 
-[Back to index](../README.md)
+[Back to documentation](../index.md)
