@@ -35,7 +35,7 @@ class GameCycleTests(unittest.TestCase):
         self.assertEqual(sorted(state.player_turn_order), original_players)
         self.assertEqual(state.cycles, 0)
 
-    # In the first cycle, the resource-phase order is by highest plant.
+    # Resource buying proceeds opposite the auction's highest-plant order.
     def test_cycle_zero_auction_handoff_orders_by_highest_plant(self):
         state = load_game_state()
         p1, p2, p3, p4 = state.player_turn_order
@@ -54,7 +54,7 @@ class GameCycleTests(unittest.TestCase):
         self.assertEqual(state.player_turn_order, [p2, p1, p3, p4])
         self.assertEqual(state.phase, 3)
         self.assertEqual(state.current_action, BUYING_RESOURCES)
-        self.assertEqual(state.current_player, p2)
+        self.assertEqual(state.current_player, state.player_turn_order[-1])
 
     # Every later cycle orders by houses, then highest plant, keeping the order of exact ties.
     def test_cycles_after_first_order_by_houses_then_highest_plant(self):

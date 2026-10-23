@@ -30,7 +30,10 @@ def start_phase_three(state):
 
     state.phase = 3
     state.current_action = BUYING_RESOURCES
-    state.current_player = state.player_turn_order[0]
+    state.current_player = state.player_turn_order[-1]
+    state.pending_resource_purchase.clear()
+    state.pending_resource_player = None
+    state.pending_resource_price = 0
 
 
 def start_phase_four(state):

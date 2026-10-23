@@ -11,7 +11,7 @@ from backend.data.files import (
     load_settings,
 )
 from backend.rules.common.game_state import GameState
-from backend.rules.common.constants import POWER_PLANT_BIDDING
+from backend.rules.common.constants import BUYING_RESOURCES, POWER_PLANT_BIDDING
 from backend.rules.common.phase_state import phase_key
 from backend.rules.common.regions import regions_in_play
 from backend.views.map_view import build_map_view
@@ -80,6 +80,7 @@ def header_view(config, state: GameState):
         "turn_order": turn_order,
         "placement_status": f"{action_label} · {player_label(state, current)}",
         "cycles": state.cycles,
+        "reverse_turn_direction": state.current_action == BUYING_RESOURCES,
     }
 
 # -------------------------------------------------------------------------------------------------

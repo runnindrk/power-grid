@@ -25,7 +25,7 @@ from backend.rules.common.phase_state import (
 from backend.rules.common.player_plants import find_player_plant
 from backend.rules.common.resource_transfer import transfer_plant_resource
 from backend.rules.common.regions import regions_in_play
-from backend.rules.common.turn_order import advance_turn
+from backend.rules.common.turn_order import advance_turn, advance_turn_reverse
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
 from backend.rules.phase_four_building_houses.building_houses import buy_houses
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
@@ -94,7 +94,10 @@ class GameService:
 
             phase = phase_key(required_action)
             mark_phase_finished(self._state, phase, player)
-            code = advance_turn(self._state, player)
+            if required_action == BUYING_RESOURCES:
+                code = advance_turn_reverse(self._state, player)
+            else:
+                code = advance_turn(self._state, player)
 
             if code != ErrorCode.E_OK:
                 return code
@@ -148,11 +151,28 @@ class GameService:
 
     def quote_resources(self, player, resources):
         with self._lock:
-            return quote_resources(self._state, player, resources)
+            data = load_resources()
+            return quote_resources(
+                self._state,
+                player,
+                resources,
+                load_plant_deck(),
+                data["resources"],
+                data["price_scales"],
+            )
 
     def buy_resources(self, player, resources):
         def rule(state):
-            return buy_resources(state, player, resources)
+            data = load_resources()
+
+            return buy_resources(
+                state,
+                player,
+                resources,
+                load_plant_deck(),
+                data["resources"],
+                data["price_scales"],
+            )
 
         return self._play_turn(player, BUYING_RESOURCES, rule)
 

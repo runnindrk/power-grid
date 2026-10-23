@@ -102,6 +102,8 @@ def resource_buy_view(config, state: GameState, player):
     """Describe the resource buying panel: one row for each buyable resource."""
     alias = player_label(state, player)
     text = config["text"]
+    pending = state.pending_resource_purchase if state.pending_resource_player == player else {}
+    pending_price = state.pending_resource_price if state.pending_resource_player == player else 0
     rows = []
 
     for resource in config["resources"]:
@@ -116,13 +118,14 @@ def resource_buy_view(config, state: GameState, player):
             "icon": resource["icon"],
             "classes": ["resource-buy-row", "resource-" + resource["id"]],
             "aria_label": f"{label} quantity for {alias}",
+            "quantity": pending.get(resource["id"], 0),
         })
 
     return {
         "aria_label": f"Buy resources for {alias}",
         "buy_aria_label": f"Buy selected resources for {alias}",
         "buy_label": text["buy_button"],
-        "price_label": text["price_format"].format(price=0),
+        "price_label": text["price_format"].format(price=pending_price),
         "disabled": player != state.current_player or state.current_action != BUYING_RESOURCES,
         "rows": rows,
     }

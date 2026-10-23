@@ -8,7 +8,9 @@ export function renderHeader(header) {
     const player = header.turn_order[index];
 
     if (index > 0) {
-      turnOrder.appendChild(document.createTextNode(' → '));
+      const arrow = header.reverse_turn_direction ? ' ← ' : ' → ';
+
+      turnOrder.appendChild(document.createTextNode(arrow));
     }
 
     const playerTurn = document.createElement('span');

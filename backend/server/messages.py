@@ -27,8 +27,8 @@ PASSED = "Passed"
 # Placeholder messages
 
 PLACEHOLDER_HOUSE_PURCHASE = "Placeholder: House Purchase"
-PLACEHOLDER_RESOURCE_PRICE = "Placeholder: Resource Price"
-PLACEHOLDER_RESOURCE_PURCHASE = "Placeholder: Resource Purchase"
+RESOURCE_PRICE_UPDATED = "Resource Purchase Updated"
+RESOURCE_PURCHASED = "Resources Purchased"
 PLACEHOLDER_BUREAUCRACY = "Placeholder: Bureaucracy"
 
 # -------------------------------------------------------------------------------------------------
@@ -38,3 +38,4 @@ HOUSE_SPOT_NOT_AVAILABLE = "House Spot Not Available"
 INVALID_RESOURCE_MOVE = "Invalid Resource Move"
 RESOURCE_MOVE_REJECTED = "Resource Move Rejected"
 INVALID_POWER_PLANT = "Invalid Power Plant"
+INVALID_RESOURCE_PURCHASE = "Invalid Resource Purchase"

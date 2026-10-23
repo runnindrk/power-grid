@@ -1,5 +1,6 @@
 import { htmlElement } from './dom-utils.js';
-import { postBuyResources, postResourcePrice } from './api.js';
+import { fetchView, postBuyResources, postResourcePrice } from './api.js';
+import { renderResourceMarket } from './resource-market.js';
 
 export function createResourceBuyPanel(player, refresh) {
   const buy = player.resource_buy;
@@ -15,7 +16,9 @@ export function createResourceBuyPanel(player, refresh) {
     const input = htmlElement('input', {
       className: 'resource-buy-quantity',
       type: 'number',
-      value: '0',
+      min: '0',
+      step: '1',
+      value: String(row.quantity),
       'aria-label': row.aria_label,
     });
     input.disabled = buy.disabled;
@@ -66,6 +69,12 @@ export function createResourceBuyPanel(player, refresh) {
 
     if (result.price_label) {
       total.textContent = result.price_label;
+    }
+
+    if (result.status === 'ok') {
+      const view = await fetchView();
+
+      renderResourceMarket(view.resource_market);
     }
   }
 

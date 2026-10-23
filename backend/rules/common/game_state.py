@@ -26,6 +26,9 @@ class GameState:
     player_power_plants: dict[str, list[dict]]
     map_houses: dict[str, dict[str, str | None]]
     pending_houses: list[dict[str, str]]
+    pending_resource_purchase: dict[str, int] = field(default_factory=dict)
+    pending_resource_player: str | None = None
+    pending_resource_price: int = 0
     cycles: int = 0
     player_colors: dict[str, str] = field(default_factory=dict)
     removed_power_plants: list[int] = field(default_factory=list)

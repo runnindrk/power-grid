@@ -20,19 +20,20 @@ from backend.server.messages import (
     INVALID_PLAYER_COUNT,
     INVALID_PLAYER_ALIASES,
     INVALID_RESOURCE_MOVE,
+    INVALID_RESOURCE_PURCHASE,
     NEW_GAME_ALREADY_STARTED,
     NEW_GAME_STARTED,
     NO_SAVED_GAME,
     PASSED,
     PLACEHOLDER_BUREAUCRACY,
     PLACEHOLDER_HOUSE_PURCHASE,
-    PLACEHOLDER_RESOURCE_PRICE,
-    PLACEHOLDER_RESOURCE_PURCHASE,
     POWER_PLANT_DISCARDED,
     POWER_PLANT_READY_UPDATED,
     POWER_PLANT_SELECTED,
     RESOURCE_MOVE_REJECTED,
     RESOURCE_MOVED,
+    RESOURCE_PRICE_UPDATED,
+    RESOURCE_PURCHASED,
 )
 from backend.server.request_helpers import build_reply, get_payload, has_int, has_text
 from backend.views.game_view import build_view
@@ -240,10 +241,14 @@ def discard_plant():
 def resource_price():
     """Return the price of the resources typed in the buy panel."""
     payload = get_payload()
-    price = game_service().quote_resources(payload.get("player"), payload.get("resources"))
+    code, price = game_service().quote_resources(payload.get("player"), payload.get("resources"))
+
+    if code != ErrorCode.E_OK:
+        return build_reply(code, INVALID_RESOURCE_PURCHASE)
+
     price_label = load_settings()["text"]["price_format"].format(price=price)
 
-    return build_reply(ErrorCode.E_OK, PLACEHOLDER_RESOURCE_PRICE, price_label)
+    return build_reply(code, RESOURCE_PRICE_UPDATED, price_label)
 
 
 @routes.post("/api/buy-resources")
@@ -252,7 +257,9 @@ def buy_resources():
     payload = get_payload()
     code = game_service().buy_resources(payload.get("player"), payload.get("resources"))
 
-    return build_reply(code, PLACEHOLDER_RESOURCE_PURCHASE)
+    message = RESOURCE_PURCHASED if code == ErrorCode.E_OK else INVALID_RESOURCE_PURCHASE
+
+    return build_reply(code, message)
 
 # -------------------------------------------------------------------------------------------------
 # Phase four: houses
