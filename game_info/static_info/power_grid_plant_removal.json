@@ -1,0 +1,22 @@
+{
+	"2_players": {
+		"plug": 1,
+		"no_plug": 5
+	},
+	"3_players": {
+		"plug": 2,
+		"no_plug": 6
+	},
+	"4_players": {
+		"plug": 1,
+		"no_plug": 3
+	},
+	"5_players": {
+		"plug": 0,
+		"no_plug": 0
+	},
+	"6_players": {
+		"plug": 0,
+		"no_plug": 0
+	}
+}

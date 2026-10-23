@@ -9,6 +9,7 @@ flowchart LR
     Settings["power_grid_settings.json"]
     Resources["power_grid_resource_prices.json"]
     Deck["power_grid_deck_set_0.json"]
+    Removal["power_grid_plant_removal.json"]
     Money["power_grid_money.json"]
     Replen["power_grid_replenishment.json"]
     Map["power_grid_germany_map.json"]
@@ -27,6 +28,8 @@ flowchart LR
     Resources --> Scales["Price scales"]
 
     Deck --> PlantInfo["Plant houses, fuel, special, hybrid"]
+    Removal --> Removed["Player-count-specific plants removed during setup"]
+    Removed --> State
     Money --> Income["Income table"]
     Replen --> Rates["Replenishment table"]
     Map --> Geometry["City positions, connection costs"]

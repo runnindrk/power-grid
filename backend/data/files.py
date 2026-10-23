@@ -16,6 +16,7 @@ RESOURCES_PATH = GAME_INFO / "static_info" / "power_grid_resource_prices.json"
 PLANT_DECK_PATH = GAME_INFO / "static_info" / "power_grid_deck_set_0.json"
 MONEY_PATH = GAME_INFO / "static_info" / "power_grid_money.json"
 REPLENISHMENT_PATH = GAME_INFO / "static_info" / "power_grid_replenishment.json"
+PLANT_REMOVAL_PATH = GAME_INFO / "static_info" / "power_grid_plant_removal.json"
 MAP_PATH = GAME_INFO / "maps" / "germany" / "power_grid_germany_map.json"
 
 # -------------------------------------------------------------------------------------------------
@@ -58,6 +59,11 @@ def load_money():
 def load_replenishment():
     """Return the resource replenishment by player count and step."""
     return read_json(REPLENISHMENT_PATH)
+
+
+def load_plant_removal():
+    """Return how many plug and non-plug plants to remove by player count."""
+    return read_json(PLANT_REMOVAL_PATH)
 
 
 def load_map():

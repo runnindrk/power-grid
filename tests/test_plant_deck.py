@@ -1,8 +1,11 @@
 import random
 import unittest
 
-from backend.data.files import load_plant_deck
-from backend.game_setup.power_plant_deck import create_initial_power_plant_setup
+from backend.data.files import load_plant_deck, load_plant_removal
+from backend.game_setup.power_plant_deck import (
+    create_initial_power_plant_setup,
+    prepare_initial_power_plant_deck,
+)
 from tests.helpers import new_auction_state, new_client
 
 
@@ -14,15 +17,47 @@ class PlantDeckTests(unittest.TestCase):
 
     # Setup starts with eight sorted plug cards and keeps every other card in order.
     def test_initial_deck_setup(self):
-        market, draw_pile = create_initial_power_plant_setup(self.plants, rng=random.Random(12))
+        market, draw_pile, removed = create_initial_power_plant_setup(
+            self.plants, 4, rng=random.Random(12),
+        )
         all_ids = set(self.plants)
 
         self.assertEqual(len(market), 8)
         self.assertEqual(market, sorted(market))
         self.assertTrue(all(self.plants[plant_id]["back_of_the_card"] == "plug" for plant_id in market))
         self.assertEqual(self.plants[draw_pile[0]]["back_of_the_card"], "plug")
-        self.assertEqual(len(market + draw_pile), len(all_ids))
-        self.assertEqual(set(market + draw_pile), all_ids)
+        self.assertEqual(len(removed), 4)
+        self.assertEqual(set(market + draw_pile + removed), all_ids)
+        self.assertEqual(len(market + draw_pile + removed), len(all_ids))
+
+    def test_removal_counts_follow_player_count(self):
+        settings = load_plant_removal()
+
+        for number_of_players in range(2, 7):
+            with self.subTest(number_of_players=number_of_players):
+                market, draw_pile, removed = create_initial_power_plant_setup(
+                    self.plants,
+                    number_of_players,
+                    rng=random.Random(number_of_players),
+                )
+                expected = settings[f"{number_of_players}_players"]
+                actual = {
+                    "plug": sum(self.plants[plant_id]["back_of_the_card"] == "plug" for plant_id in removed),
+                    "no_plug": sum(self.plants[plant_id]["back_of_the_card"] == "no_plug" for plant_id in removed),
+                }
+
+                self.assertEqual(actual, expected)
+                self.assertFalse(set(removed) & set(market + draw_pile))
+                self.assertEqual(set(market + draw_pile + removed), set(self.plants))
+
+    def test_prepared_deck_and_removed_plants_are_stored_in_game_state(self):
+        prepare_initial_power_plant_deck(self.state, self.plants, rng=random.Random(12))
+
+        self.assertEqual(len(self.state.removed_power_plants), 4)
+        self.assertEqual(
+            set(self.state.power_plant_market + self.state.power_plant_deck + self.state.removed_power_plants),
+            set(self.plants),
+        )
 
     # The next-card indicator follows the top of the draw pile.
     def test_next_card_back_comes_from_deck_top(self):
