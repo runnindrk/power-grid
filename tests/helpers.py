@@ -13,6 +13,7 @@ def new_auction_state():
     """Return a fresh copy of the save game, placed at the start of the power plant auction."""
     state = load_game_state()
     state.cycles = 0
+    state.player_turn_order = list(state.player_aliases)
     state.phase = 2
     state.current_action = POWER_PLANT_AUCTION
     state.current_player = state.player_turn_order[0]

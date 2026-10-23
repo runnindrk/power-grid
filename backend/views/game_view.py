@@ -15,6 +15,7 @@ from backend.rules.common.constants import (
     BUREAUCRACY,
     BUILDING_HOUSES,
     BUYING_RESOURCES,
+    PHASE_TWO_AUCTION,
     POWER_PLANT_BIDDING,
 )
 from backend.rules.common.phase_state import phase_key
@@ -55,6 +56,7 @@ def header_view(config, state: GameState):
     phase = phase_key(state.current_action)
     finished_players = state.phase_finished_players.get(phase, [])
     passed_players = state.auction_passed if state.current_action == POWER_PLANT_BIDDING else []
+    out_players = state.auction_skipped if phase == PHASE_TWO_AUCTION else []
     turn_order = []
 
     for player in state.player_turn_order:
@@ -69,12 +71,16 @@ def header_view(config, state: GameState):
         if player in passed_players:
             classes.append("passed")
 
+        if player in out_players:
+            classes.append("out")
+
         turn_order.append({
             "label": player_label(state, player),
             "color": player_color(config, state, player),
             "current": player == current,
             "finished": player in finished_players,
             "passed": player in passed_players,
+            "out": player in out_players,
             "classes": classes,
         })
 

@@ -42,7 +42,8 @@ header h1 {
   font-weight: 600;
 }
 .turn-order-player.finished::after,
-.turn-order-player.passed::after {
+.turn-order-player.passed::after,
+.turn-order-player.out::after {
   position: absolute;
   top: 50%;
   right: -2px;

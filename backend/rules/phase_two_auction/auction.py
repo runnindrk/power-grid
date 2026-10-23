@@ -12,14 +12,14 @@ from backend.rules.common.game_state import GameState
 from backend.rules.common.phase_flow import start_phase_three
 from backend.rules.common.phase_state import mark_phase_finished
 from backend.rules.common.player_plants import new_power_plant
-from backend.rules.common.turn_order import next_player
+from backend.rules.common.turn_order import next_clockwise_player, next_player
 from backend.rules.phase_one_turn_order.initial_order import order_by_highest_plant
 
 # -------------------------------------------------------------------------------------------------
 # Who is still in
 
 def players_who_can_select(state: GameState):
-    """Return the players, in turn order, who may still pick a plant in this auction round."""
+    """Return the players, in turn order, who may still pick a plant this phase."""
     players = []
 
     for player in state.player_turn_order:
@@ -57,18 +57,18 @@ def highest_active_bid(state: GameState):
 # Ending the auction
 
 def clear_current_auction(state: GameState):
-    """Forget the bids and participants of the plant that was just resolved."""
+    """Forget this plant's bids without restoring players who left the phase."""
     state.selected_power_plant = None
     state.auction_participants.clear()
     state.auction_bids.clear()
     state.auction_passed.clear()
-    state.auction_skipped.clear()
     state.auction_starter = None
 
 
 def finish_auction(state: GameState):
     """End the whole auction phase and start resource buying."""
     clear_current_auction(state)
+    state.auction_skipped.clear()
     state.players_bought_power_plant.clear()
     state.pending_plant_replacement = None
 
@@ -90,7 +90,7 @@ def continue_after_award(state: GameState, winner, auction_starter):
     remaining = []
 
     for player in state.player_turn_order:
-        if player not in state.players_bought_power_plant:
+        if player not in state.players_bought_power_plant and player not in state.auction_skipped:
             remaining.append(player)
 
     following = next_player(state, winner, remaining)
@@ -172,7 +172,7 @@ def select_power_plant(state: GameState, plant_id, plant_slots_per_player):
     if len(selectors) == 1:
         award_power_plant(state, player, plant_slots_per_player)
     else:
-        state.current_player = next_player(state, player, selectors)
+        state.current_player = next_clockwise_player(state, player, selectors)
 
     return ErrorCode.E_OK
 
@@ -198,7 +198,7 @@ def place_bid(state: GameState, player, amount, plant_slots_per_player):
     if len(bidders) == 1:
         award_power_plant(state, player, plant_slots_per_player)
     else:
-        state.current_player = next_player(state, player, bidders)
+        state.current_player = next_clockwise_player(state, player, bidders)
 
     return ErrorCode.E_OK
 
@@ -239,8 +239,6 @@ def _skip_selection(state: GameState, player):
 
 def _leave_bidding(state: GameState, player, plant_slots_per_player):
     """Leave the bidding; the last bidder left wins the plant."""
-    if state.cycles == 0 and player == state.auction_starter:
-        return ErrorCode.E_NOT_OKAY
     if player not in state.auction_participants or player in state.auction_passed:
         return ErrorCode.E_NOT_OKAY
 
@@ -255,7 +253,7 @@ def _leave_bidding(state: GameState, player, plant_slots_per_player):
     if len(bidders) == 1:
         award_power_plant(state, bidders[0], plant_slots_per_player)
     else:
-        state.current_player = next_player(state, player, bidders)
+        state.current_player = next_clockwise_player(state, player, bidders)
 
     return ErrorCode.E_OK
 

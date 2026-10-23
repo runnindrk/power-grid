@@ -33,6 +33,10 @@ export function renderHeader(header) {
       playerTurn.title = 'Passed on this plant';
     }
 
+    if (player.out) {
+      playerTurn.title = 'Out of the plant auction';
+    }
+
     turnOrder.appendChild(playerTurn);
   }
 

@@ -21,6 +21,20 @@ def next_player(state, player, candidates):
     return None
 
 
+def next_clockwise_player(state, player, candidates):
+    """Return the next candidate in stable roster order, wrapping around the table."""
+    clockwise_order = list(state.player_aliases)
+    start = clockwise_order.index(player)
+
+    for step in range(1, len(clockwise_order) + 1):
+        candidate = clockwise_order[(start + step) % len(clockwise_order)]
+
+        if candidate in candidates:
+            return candidate
+
+    return None
+
+
 def previous_player(state, player, candidates):
     """Return the first candidate before the player in turn order, wrapping around."""
     turn_order = state.player_turn_order
