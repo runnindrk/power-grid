@@ -104,7 +104,21 @@ def connections_from_matrix(matrix):
     return connections
 
 
-def connection_views(cities, connections, cost_colors, active_regions):
+def inactive_connection_indexes(cities, connections, active_regions):
+    """Return indexes for connections that touch an inactive region."""
+    inactive = set()
+
+    for index, (first, second, _) in enumerate(connections):
+        if (
+            cities[first]["region"].casefold() not in active_regions
+            or cities[second]["region"].casefold() not in active_regions
+        ):
+            inactive.add(index)
+
+    return inactive
+
+
+def connection_views(cities, connections, cost_colors, inactive_connections):
     """Return the lines between cities, and the cost labels drawn on the lines that have a cost."""
     costs = []
 
@@ -121,10 +135,7 @@ def connection_views(cities, connections, cost_colors, active_regions):
         first, second, cost = connections[index]
         start = cities[first]
         end = cities[second]
-        inactive = (
-            start["region"].casefold() not in active_regions
-            or end["region"].casefold() not in active_regions
-        )
+        inactive = index in inactive_connections
         classes = ["connection-line"]
 
         if inactive:
@@ -198,7 +209,8 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
 # -------------------------------------------------------------------------------------------------
 # City view
 
-def city_view(config, index, city, houses, connections, players, selected, active_regions):
+def city_view(config, index, city, houses, connections, players, selected, active_regions,
+              inactive_connections):
     """Describe a city: its house spots, its label, its tooltip and the lines to highlight when hovered."""
     display = config["display"]
     text = config["text"]
@@ -223,7 +235,7 @@ def city_view(config, index, city, houses, connections, players, selected, activ
     for number in range(len(connections)):
         first, second, cost = connections[number]
 
-        if first == index or second == index:
+        if (first == index or second == index) and number not in inactive_connections:
             connection_count += 1
             highlight_ids.append(f"connection-{number}")
 
@@ -275,8 +287,9 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
 
     cities = scaled_cities(map_data, scale)
     connections = connections_from_matrix(map_data["connection_matrix"])
+    inactive_connections = inactive_connection_indexes(cities, connections, active_regions)
     lines, cost_labels = connection_views(
-        cities, connections, config["display"]["cost_colors"], active_regions,
+        cities, connections, config["display"]["cost_colors"], inactive_connections,
     )
 
     city_views = []
@@ -284,7 +297,15 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
     for index in range(len(cities)):
         houses = map_houses[cities[index]["name"]]
         city_views.append(city_view(
-            config, index, cities[index], houses, connections, players, selected, active_regions,
+            config,
+            index,
+            cities[index],
+            houses,
+            connections,
+            players,
+            selected,
+            active_regions,
+            inactive_connections,
         ))
 
     text = config["text"]

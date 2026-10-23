@@ -12,6 +12,7 @@ from backend.rules.common.constants import BUILDING_HOUSES
 from backend.rules.common.error_codes import ErrorCode
 from backend.rules.common.regions import regions_in_play
 from backend.views.game_view import build_view
+from backend.views.map_view import connections_from_matrix
 
 
 class MapAreasTests(unittest.TestCase):
@@ -128,6 +129,36 @@ class MapAreasTests(unittest.TestCase):
                 if not city["active"]:
                     self.assertTrue(city["aria_disabled"])
                     self.assertTrue(all(spot["aria_disabled"] for spot in city["spots"]))
+
+    def test_active_city_hover_excludes_connections_to_inactive_regions(self):
+        state = load_game_state()
+        map_data = load_map()
+        active_regions = regions_in_play(state, load_number_of_areas())
+        cities = map_data["cities_positions"]
+        region_by_index = {index: city[1].casefold() for index, city in enumerate(cities)}
+        city_index_by_name = {city[0]: index for index, city in enumerate(cities)}
+        connections = connections_from_matrix(map_data["connection_matrix"])
+        map_cities = {city["name"]: city for city in build_view(state)["map"]["cities"]}
+        checked_cities = 0
+
+        for city_name, city_index in city_index_by_name.items():
+            if region_by_index[city_index] not in active_regions:
+                continue
+
+            inactive_incident_ids = {
+                f"connection-{index}"
+                for index, (first, second, _) in enumerate(connections)
+                if (first == city_index and region_by_index[second] not in active_regions)
+                or (second == city_index and region_by_index[first] not in active_regions)
+            }
+
+            if inactive_incident_ids:
+                checked_cities += 1
+
+                with self.subTest(city=city_name):
+                    self.assertFalse(inactive_incident_ids & set(map_cities[city_name]["highlight_ids"]))
+
+        self.assertGreater(checked_cities, 0)
 
     def test_house_spots_reject_inactive_regions_and_allow_active_regions(self):
         state = load_game_state()
