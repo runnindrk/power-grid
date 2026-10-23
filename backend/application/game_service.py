@@ -6,13 +6,19 @@ from threading import RLock
 
 from backend.data.files import load_plant_deck, load_resources
 from backend.rules.common.error_codes import ErrorCode
-from backend.rules.common.phase_state import mark_phase_finished, phase_key
+from backend.rules.common.phase_state import (
+    all_players_finished,
+    clear_phase_finished,
+    mark_phase_finished,
+    phase_key,
+)
 from backend.rules.common.resource_transfer import (
     find_player_plant,
     transfer_plant_resource,
 )
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
 from backend.rules.phase_four_building_houses.building_houses import buy_houses
+from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
 from backend.rules.phase_three_resource_buying.resource_buying import buy_resources, quote_resources
 from backend.rules.phase_two_auction.auction import (
     discard_power_plant,
@@ -28,11 +34,16 @@ from backend.rules.phase_two_auction.turn_order import advance_turn
 class GameService:
     """Coordinate game rules, turn checks, state access, and save requests."""
 
-    def __init__(self, state, save_state, plant_slots_per_player=3):
+    def __init__(self, state, save_state, plant_slots_per_player=3, rng=None):
         self._state = state
         self._save_state = save_state
         self._plant_slots_per_player = plant_slots_per_player
+        self._rng = rng
         self._lock = RLock()
+
+        # Loading an initial setup immediately performs phase one and starts phase two.
+        if self._state.current_action == "determining_player_order":
+            determine_initial_order(self._state, self._rng)
 
     def snapshot(self):
         with self._lock:
@@ -42,22 +53,46 @@ class GameService:
         with self._lock:
             self._save_state(self._state)
 
-    def _current_player_action(self, player, action):
+    def _current_player_action(self, player, required_action, action):
         with self._lock:
             # Reject stale requests before a rule can mutate the game state.
             if player != self._state.current_player or player not in self._state.player_turn_order:
                 return ErrorCode.E_NOT_OKAY
+            if self._state.current_action != required_action:
+                return ErrorCode.E_NOT_OKAY
 
-            phase = phase_key(self._state.current_action)
             code = action(self._state)
-            if code == ErrorCode.E_OK:
-                mark_phase_finished(self._state, phase, player)
-                return advance_turn(self._state, player)
+            if code != ErrorCode.E_OK:
+                return code
 
-            return code
+            phase = phase_key(required_action)
+            mark_phase_finished(self._state, phase, player)
+            code = advance_turn(self._state, player)
+            if code != ErrorCode.E_OK or not all_players_finished(self._state, phase):
+                return code
+
+            clear_phase_finished(self._state, phase)
+            self._advance_phase(phase)
+            return ErrorCode.E_OK
+
+    def _advance_phase(self, phase):
+        if phase == "phase_three_resource_buying":
+            self._state.phase = 4
+            self._state.current_action = "building_houses"
+        elif phase == "phase_four_building_houses":
+            self._state.phase = 5
+            self._state.current_action = "bureaucracy"
+        elif phase == "phase_five_bureaucracy":
+            self._state.cycles += 1
+            self._state.phase = 1
+            self._state.current_action = "determining_player_order"
+            determine_initial_order(self._state, self._rng)
 
     def toggle_house_spot(self, city, spot):
         with self._lock:
+            if self._state.current_action != "building_houses":
+                return ErrorCode.E_NOT_OKAY
+
             spots = self._state.map_houses.get(city)
             if spots is None or spot not in spots or spots[spot] is not None:
                 return ErrorCode.E_NOT_OKAY
@@ -122,6 +157,7 @@ class GameService:
     def buy_resources(self, player, resources):
         return self._current_player_action(
             player,
+            "buying_resources",
             lambda state: buy_resources(state, player, resources),
         )
 
@@ -131,8 +167,9 @@ class GameService:
 
         return self._current_player_action(
             player,
+            "building_houses",
             buy_selected_houses,
         )
 
     def bureaucracy(self, player):
-        return self._current_player_action(player, bureaucracy)
+        return self._current_player_action(player, "bureaucracy", bureaucracy)

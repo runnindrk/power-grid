@@ -133,17 +133,19 @@ class AuctionWorkflowTests(unittest.TestCase):
                 200,
             )
 
-        self.assertEqual(self.state.current_action, "building_houses")
+        self.assertEqual(self.state.current_action, "buying_resources")
+        self.assertEqual(self.state.phase, 3)
         next_phase_header = self.client.get("/api/view").get_json()["header"]["turn_order"]
         self.assertTrue(all("finished" not in player["classes"] for player in next_phase_header))
 
-    # Passing on selection through the whole turn order advances to house-building.
+    # Passing on selection through the whole turn order starts resource buying.
     def test_all_selectors_pass(self):
         for player in self.state.player_turn_order:
             response = self.client.post("/api/bid/pass", json={"player": player})
             self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(self.state.current_action, "building_houses")
+        self.assertEqual(self.state.current_action, "buying_resources")
+        self.assertEqual(self.state.phase, 3)
         self.assertIsNone(self.state.selected_power_plant)
         self.assertFalse(self.state.players_bought_power_plant)
 

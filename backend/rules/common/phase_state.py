@@ -24,3 +24,9 @@ def mark_phase_finished(state, phase, player):
 def clear_phase_finished(state, phase):
     """Remove completion marks when a phase ends."""
     state.phase_finished_players.pop(phase_key(phase), None)
+
+
+def all_players_finished(state, phase):
+    """Return whether every player has completed the named phase."""
+    finished_players = set(state.phase_finished_players.get(phase_key(phase), []))
+    return all(player in finished_players for player in state.player_turn_order)

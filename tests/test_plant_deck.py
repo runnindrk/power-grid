@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from backend.application.game_service import GameService
 from backend.data.files import load_plant_deck
-from backend.rules.phase_two_auction.deck import create_initial_power_plant_setup
+from backend.game_setup.power_plant_deck import create_initial_power_plant_setup
 from backend.server.main import app
 
 

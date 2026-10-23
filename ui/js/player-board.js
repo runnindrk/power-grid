@@ -50,7 +50,7 @@ function createPowerButton(player, refresh) {
     type: 'button',
     textContent: 'Power',
   });
-  button.disabled = !player.is_current_player;
+  button.disabled = !player.can_power;
 
   button.addEventListener('click', () => {
     // The server advances only when this player owns the current turn.

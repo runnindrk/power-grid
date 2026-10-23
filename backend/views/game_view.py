@@ -65,6 +65,7 @@ def header_view(config, state, game_state):
     return {
         "turn_order": turn_order,
         "placement_status": f"{action_label} · {player_label(state, current)}",
+        "cycles": game_state.cycles,
     }
 
 # -------------------------------------------------------------------------------------------------
@@ -96,7 +97,8 @@ def build_view(game_state: GameState):
     deck = load_plant_deck()
 
     players = {}
-    for player in state["player_turn_order"]:
+    board_order = list(state["player_colors"] or state["player_aliases"])
+    for player in board_order:
         players[player] = {"label": player_label(state, player), "color": player_color(config, state, player)}
 
     selected = set()
@@ -104,7 +106,7 @@ def build_view(game_state: GameState):
         selected.add((house["city"], house["spot"]))
 
     player_rows = []
-    for player in state["player_turn_order"][:config["rules"]["max_players_on_board"]]:
+    for player in board_order[:config["rules"]["max_players_on_board"]]:
         player_rows.append(player_row(config, state, player, deck, game_state))
 
     market_cards = []

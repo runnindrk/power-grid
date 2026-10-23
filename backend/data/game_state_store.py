@@ -3,7 +3,7 @@
 
 import json
 
-from backend.data.files import GAME_STATE_PATH, read_json
+from backend.data.files import GAME_STATE_PATH, load_settings, read_json
 from backend.rules.common.game_state import GameState
 
 # -------------------------------------------------------------------------------------------------
@@ -11,7 +11,15 @@ from backend.rules.common.game_state import GameState
 
 def load_game_state():
     """Load the saved game into the Python state structure."""
-    return GameState(**read_json(GAME_STATE_PATH))
+    state = GameState(**read_json(GAME_STATE_PATH))
+    if not state.player_colors:
+        palette = load_settings()["display"]["player_colors"]
+        state.player_colors = {
+            player: palette[index % len(palette)]
+            for index, player in enumerate(state.player_aliases)
+        }
+
+    return state
 
 
 def save_game_state(state):

@@ -15,10 +15,14 @@ def player_label(state, player):
 
 
 def player_color(config, state, player):
-    """Return the color of a player, chosen by their position in the turn order."""
-    palette = config["display"]["player_colors"]
-    index = state["player_turn_order"].index(player)
+    """Return the player's persistent color, independent of turn order."""
+    player_colors = state.get("player_colors", {})
+    if player in player_colors:
+        return player_colors[player]
 
+    # Older saves may not have stored colors yet; use stable roster order once.
+    palette = config["display"]["player_colors"]
+    index = list(state["player_aliases"]).index(player)
     return palette[index % len(palette)]
 
 
@@ -80,8 +84,11 @@ def house_purchase_view(config, state, player, game_state):
 
     if player != state["current_player"]:
         result["total"] = text["waiting_for_turn"]
+    elif game_state.current_action != "building_houses":
+        result["total"] = text["house_prompt"]
     elif count == 0:
         result["total"] = text["house_prompt"]
+        result["buy_disabled"] = False
     else:
         price = quote_houses(game_state, player, state["pending_houses"])
         result["total"] = text["house_summary"].format(count=count, price=price)
@@ -90,7 +97,7 @@ def house_purchase_view(config, state, player, game_state):
     return result
 
 
-def resource_buy_view(config, state, player):
+def resource_buy_view(config, state, player, game_state):
     """Describe the resource buying panel: one row for each buyable resource."""
     alias = player_label(state, player)
     rows = []
@@ -111,7 +118,10 @@ def resource_buy_view(config, state, player):
         "aria_label": f"Buy resources for {alias}",
         "buy_aria_label": f"Buy selected resources for {alias}",
         "price_label": config["text"]["price_format"].format(price=0),
-        "disabled": player != state["current_player"],
+        "disabled": (
+            player != state["current_player"]
+            or game_state.current_action != "buying_resources"
+        ),
         "rows": rows,
     }
 
@@ -148,6 +158,10 @@ def player_row(config, state, player, deck, game_state: GameState):
     return {
         "player": player,
         "is_current_player": player == state["current_player"],
+        "can_power": (
+            player == state["current_player"]
+            and game_state.current_action == "bureaucracy"
+        ),
         "label": alias,
         "aria_label": f"Player {alias}",
         "color": player_color(config, state, player),
@@ -157,7 +171,7 @@ def player_row(config, state, player, deck, game_state: GameState):
         },
         "money": {"value": money, "label": config["text"]["money_format"].format(money=money)},
         "bid": bid_view(config, state, player, game_state),
-        "resource_buy": resource_buy_view(config, state, player),
+        "resource_buy": resource_buy_view(config, state, player, game_state),
         "house_purchase": house_purchase_view(config, state, player, game_state),
         "plant_slots": plant_slots(config, state, player, deck, game_state),
     }

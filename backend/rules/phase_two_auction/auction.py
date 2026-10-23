@@ -4,6 +4,7 @@
 from backend.rules.common.error_codes import ErrorCode
 from backend.rules.common.game_state import GameState
 from backend.rules.common.phase_state import clear_phase_finished, mark_phase_finished
+from backend.rules.phase_one_turn_order.initial_order import determine_order_after_first_auction
 
 # -------------------------------------------------------------------------------------------------
 # Auction helpers
@@ -22,11 +23,7 @@ def _next_player(state, player, candidates):
     return None
 
 
-def _advance_to_building(state, player):
-    current_index = state.player_turn_order.index(player)
-    next_index = (current_index + 1) % len(state.player_turn_order)
-    state.current_player = state.player_turn_order[next_index]
-    state.current_action = "building_houses"
+def _advance_to_resource_buying(state, player):
     state.selected_power_plant = None
     state.auction_participants.clear()
     state.auction_bids.clear()
@@ -36,6 +33,12 @@ def _advance_to_building(state, player):
     state.auction_starter = None
     state.pending_plant_replacement = None
     clear_phase_finished(state, "phase_two_auction")
+    if state.cycles == 0:
+        determine_order_after_first_auction(state)
+    else:
+        state.current_player = state.player_turn_order[0]
+        state.current_action = "buying_resources"
+        state.phase = 3
 
 
 def _continue_after_award(state, winner, auction_starter):
@@ -52,7 +55,7 @@ def _continue_after_award(state, winner, auction_starter):
     ]
     next_player = _next_player(state, winner, eligible)
     if next_player is None:
-        _advance_to_building(state, winner)
+        _advance_to_resource_buying(state, winner)
     else:
         state.current_player = next_player
         state.current_action = "power_plant_auction"
@@ -205,7 +208,7 @@ def pass_bid(state: GameState, player, plant_slots_per_player):
         ]
         next_player = _next_player(state, player, eligible)
         if next_player is None:
-            _advance_to_building(state, player)
+            _advance_to_resource_buying(state, player)
         else:
             state.current_player = next_player
         return ErrorCode.E_OK
