@@ -223,6 +223,8 @@ def _skip_selection(state: GameState, player):
 
     if player not in selectors:
         return ErrorCode.E_NOT_OKAY
+    if state.cycles == 0:
+        return ErrorCode.E_NOT_OKAY
 
     state.auction_skipped.append(player)
     following = next_player(state, player, players_who_can_select(state))

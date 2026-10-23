@@ -181,7 +181,22 @@ class AuctionWorkflowTests(unittest.TestCase):
         self.assertTrue(all("finished" not in player["classes"] for player in header))
 
     # Passing on selection through the whole turn order starts resource buying.
+    def test_cycle_zero_selectors_cannot_pass_on_selection(self):
+        current = self.state.current_player
+        current_view = find_by_label(
+            self.client.get("/api/view").get_json()["players"],
+            self.state.player_aliases[current],
+        )
+
+        self.assertTrue(current_view["bid"]["pass_disabled"])
+        self.assertEqual(self.post("/api/bid/pass", player=current), 400)
+        self.assertEqual(self.state.current_player, current)
+        self.assertFalse(self.state.auction_skipped)
+
+    # Later cycles permit every selector to pass, ending the auction phase.
     def test_all_selectors_pass(self):
+        self.state.cycles = 1
+
         for player in self.state.player_turn_order:
             self.assertEqual(self.post("/api/bid/pass", player=player), 200)
 

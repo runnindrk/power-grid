@@ -134,6 +134,9 @@ def bid_view(config, state: GameState, player):
     text = config["text"]
     is_current = player == state.current_player
     is_bidding = state.current_action == POWER_PLANT_BIDDING
+    cycle_zero_cannot_skip_selection = (
+        state.cycles == 0 and state.current_action == POWER_PLANT_AUCTION
+    )
     selector_cannot_pass = state.cycles == 0 and is_bidding and player == state.auction_starter
     highest_bid = highest_active_bid(state)
 
@@ -160,6 +163,7 @@ def bid_view(config, state: GameState, player):
         "pass_disabled": (
             not is_current
             or state.current_action not in (POWER_PLANT_AUCTION, POWER_PLANT_BIDDING)
+            or cycle_zero_cannot_skip_selection
             or selector_cannot_pass
         ),
         "aria_label": f"Power plant bid for {alias}",

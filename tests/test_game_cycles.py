@@ -12,6 +12,7 @@ from backend.rules.common.constants import (
 )
 from backend.rules.common.error_codes import ErrorCode
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
+from backend.rules.phase_two_auction.auction import finish_auction
 from backend.server.app import create_app
 from tests.helpers import new_service
 
@@ -47,10 +48,8 @@ class GameCycleTests(unittest.TestCase):
             p3: [{"plant_id": 10}],
             p4: [],
         }
-        service = new_service(state)
-
-        for _ in state.player_turn_order:
-            self.assertEqual(service.pass_bid(state.current_player), ErrorCode.E_OK)
+        state.players_bought_power_plant = list(state.player_turn_order)
+        finish_auction(state)
 
         self.assertEqual(state.player_turn_order, [p2, p1, p3, p4])
         self.assertEqual(state.phase, 3)
@@ -91,11 +90,12 @@ class GameCycleTests(unittest.TestCase):
         rng = random.Random(11)
         state = create_new_game_state(4, rng=rng)
         self.assertEqual(determine_initial_order(state, rng), ErrorCode.E_OK)
+        state.cycles = 1
         service = new_service(state, rng=rng)
 
         self.assertEqual(state.phase, 2)
         self.assertEqual(state.current_action, POWER_PLANT_AUCTION)
-        self.assertEqual(state.cycles, 0)
+        self.assertEqual(state.cycles, 1)
 
         for _ in state.player_turn_order:
             self.assertEqual(service.pass_bid(state.current_player), ErrorCode.E_OK)
@@ -120,7 +120,7 @@ class GameCycleTests(unittest.TestCase):
         for _ in state.player_turn_order:
             self.assertEqual(service.bureaucracy(state.current_player), ErrorCode.E_OK)
 
-        self.assertEqual(state.cycles, 1)
+        self.assertEqual(state.cycles, 2)
         self.assertEqual(state.phase, 2)
         self.assertEqual(state.current_action, POWER_PLANT_AUCTION)
         self.assertEqual(state.current_player, state.player_turn_order[0])
