@@ -44,3 +44,15 @@ class GameState:
 
     def to_dict(self):
         return asdict(self)
+
+# -------------------------------------------------------------------------------------------------
+# Player colors
+
+def default_player_colors(player_aliases, palette):
+    """Give every player a color in roster order; the palette repeats if it is too short."""
+    colors = {}
+
+    for index, player in enumerate(player_aliases):
+        colors[player] = palette[index % len(palette)]
+
+    return colors

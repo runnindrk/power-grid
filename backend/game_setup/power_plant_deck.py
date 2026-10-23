@@ -1,5 +1,10 @@
+# -------------------------------------------------------------------------------------------------
+# Imports
+
 import random
 
+# -------------------------------------------------------------------------------------------------
+# Shuffle deck
 
 def create_initial_power_plant_setup(plant_definitions, market_size=8, rng=None):
     """Return a sorted starting market and a persisted, ordered draw pile."""

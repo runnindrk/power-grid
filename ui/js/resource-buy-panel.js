@@ -44,7 +44,7 @@ export function createResourceBuyPanel(player, refresh) {
   });
 
   buyButton.append(
-    htmlElement('span', { className: 'resource-buy-label', textContent: 'Buy' }),
+    htmlElement('span', { className: 'resource-buy-label', textContent: buy.buy_label }),
     total,
   );
   buyButton.disabled = buy.disabled;

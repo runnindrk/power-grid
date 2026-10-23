@@ -7,7 +7,7 @@ sequenceDiagram
     actor Player
     participant Map as map-view.js
     participant Api as api.js
-    participant Route as main.py /api/house-spot
+    participant Route as routes.py /api/house-spot
     participant Actions as game_actions.toggle_house_spot
     participant State as rules/game_state.py
     participant Save as game_state.json save

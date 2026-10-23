@@ -5,17 +5,26 @@ from copy import deepcopy
 from threading import RLock
 
 from backend.data.files import load_plant_deck, load_resources
+from backend.rules.common.constants import (
+    BUILDING_HOUSES,
+    BUREAUCRACY,
+    BUYING_RESOURCES,
+    DETERMINING_PLAYER_ORDER,
+    PHASE_FIVE_BUREAUCRACY,
+    PHASE_FOUR_BUILDING_HOUSES,
+    PHASE_THREE_RESOURCE_BUYING,
+)
 from backend.rules.common.error_codes import ErrorCode
+from backend.rules.common.phase_flow import start_phase_five, start_phase_four
 from backend.rules.common.phase_state import (
     all_players_finished,
     clear_phase_finished,
     mark_phase_finished,
     phase_key,
 )
-from backend.rules.common.resource_transfer import (
-    find_player_plant,
-    transfer_plant_resource,
-)
+from backend.rules.common.player_plants import find_player_plant
+from backend.rules.common.resource_transfer import transfer_plant_resource
+from backend.rules.common.turn_order import advance_turn
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
 from backend.rules.phase_four_building_houses.building_houses import buy_houses
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
@@ -26,13 +35,12 @@ from backend.rules.phase_two_auction.auction import (
     place_bid,
     select_power_plant,
 )
-from backend.rules.phase_two_auction.turn_order import advance_turn
 
 # -------------------------------------------------------------------------------------------------
-# Application service
+# Game service
 
 class GameService:
-    """Coordinate game rules, turn checks, state access, and save requests."""
+    """The only way to read or change the game: one lock, turn checks, rules and saving."""
 
     def __init__(self, state, save_state, plant_slots_per_player=3, rng=None):
         self._state = state
@@ -41,98 +49,76 @@ class GameService:
         self._rng = rng
         self._lock = RLock()
 
-        # Loading an initial setup immediately performs phase one and starts phase two.
-        if self._state.current_action == "determining_player_order":
+        # A game loaded in phase one gets its turn order right away, which starts phase two.
+        if self._state.current_action == DETERMINING_PLAYER_ORDER:
             determine_initial_order(self._state, self._rng)
 
+    # ---------------------------------------------------------------------------------------------
+    # Reading and saving
+
     def snapshot(self):
+        """Return a copy of the state, so readers never see a half-finished action."""
         with self._lock:
             return deepcopy(self._state)
 
     def save_game(self):
+        """Write the current state to the save game."""
         with self._lock:
             self._save_state(self._state)
 
-    def _current_player_action(self, player, required_action, action):
+    # ---------------------------------------------------------------------------------------------
+    # Phase handling
+
+    def _play_turn(self, player, required_action, rule):
+        """Run a rule for the current player, end their turn and move on when everyone is done."""
         with self._lock:
-            # Reject stale requests before a rule can mutate the game state.
-            if player != self._state.current_player or player not in self._state.player_turn_order:
+            # Stale requests are rejected before the rule can change anything.
+            if player != self._state.current_player:
+                return ErrorCode.E_NOT_OKAY
+            if player not in self._state.player_turn_order:
                 return ErrorCode.E_NOT_OKAY
             if self._state.current_action != required_action:
                 return ErrorCode.E_NOT_OKAY
 
-            code = action(self._state)
+            code = rule(self._state)
+
             if code != ErrorCode.E_OK:
                 return code
 
             phase = phase_key(required_action)
             mark_phase_finished(self._state, phase, player)
             code = advance_turn(self._state, player)
-            if code != ErrorCode.E_OK or not all_players_finished(self._state, phase):
+
+            if code != ErrorCode.E_OK:
                 return code
 
-            clear_phase_finished(self._state, phase)
-            self._advance_phase(phase)
-            return ErrorCode.E_OK
-
-    def _advance_phase(self, phase):
-        if phase == "phase_three_resource_buying":
-            self._state.phase = 4
-            self._state.current_action = "building_houses"
-        elif phase == "phase_four_building_houses":
-            self._state.phase = 5
-            self._state.current_action = "bureaucracy"
-        elif phase == "phase_five_bureaucracy":
-            self._state.cycles += 1
-            self._state.phase = 1
-            self._state.current_action = "determining_player_order"
-            determine_initial_order(self._state, self._rng)
-
-    def toggle_house_spot(self, city, spot):
-        with self._lock:
-            if self._state.current_action != "building_houses":
-                return ErrorCode.E_NOT_OKAY
-
-            spots = self._state.map_houses.get(city)
-            if spots is None or spot not in spots or spots[spot] is not None:
-                return ErrorCode.E_NOT_OKAY
-
-            selection = {"city": city, "spot": spot}
-            if selection in self._state.pending_houses:
-                self._state.pending_houses.remove(selection)
-            else:
-                self._state.pending_houses.append(selection)
+            if all_players_finished(self._state, phase):
+                clear_phase_finished(self._state, phase)
+                self._start_next_phase(phase)
 
             return ErrorCode.E_OK
 
-    def toggle_ready_to_power(self, player, plant_id):
-        with self._lock:
-            plant = find_player_plant(self._state, player, plant_id)
-            if plant is None:
-                return ErrorCode.E_NOT_OKAY
+    def _start_next_phase(self, finished_phase):
+        """Start the phase that follows the finished one (phase two ends inside the auction rules)."""
+        if finished_phase == PHASE_THREE_RESOURCE_BUYING:
+            start_phase_four(self._state)
 
-            plant["ready_to_power"] = not plant["ready_to_power"]
-            return ErrorCode.E_OK
+        elif finished_phase == PHASE_FOUR_BUILDING_HOUSES:
+            start_phase_five(self._state)
 
-    def transfer_resource(
-        self,
-        player,
-        source_plant_id,
-        source_slot,
-        target_plant_id,
-        target_slot,
-    ):
-        with self._lock:
-            return transfer_plant_resource(
-                self._state,
-                player,
-                source_plant_id,
-                source_slot,
-                target_plant_id,
-                target_slot,
-                load_plant_deck(),
-                load_resources()["resources"],
-            )
+        elif finished_phase == PHASE_FIVE_BUREAUCRACY:
+            self._start_next_cycle()
+
+    def _start_next_cycle(self):
+        """Go back to phase one, which immediately sets the order and starts the auction."""
+        self._state.cycles += 1
+        self._state.phase = 1
+        self._state.current_action = DETERMINING_PLAYER_ORDER
+
+        determine_initial_order(self._state, self._rng)
+
+    # ---------------------------------------------------------------------------------------------
+    # Phase two: auction
 
     def select_power_plant(self, plant_id):
         with self._lock:
@@ -150,26 +136,82 @@ class GameService:
         with self._lock:
             return discard_power_plant(self._state, player, plant_id)
 
+    # ---------------------------------------------------------------------------------------------
+    # Phase three: resources
+
     def quote_resources(self, player, resources):
         with self._lock:
             return quote_resources(self._state, player, resources)
 
     def buy_resources(self, player, resources):
-        return self._current_player_action(
-            player,
-            "buying_resources",
-            lambda state: buy_resources(state, player, resources),
-        )
+        def rule(state):
+            return buy_resources(state, player, resources)
+
+        return self._play_turn(player, BUYING_RESOURCES, rule)
+
+    # ---------------------------------------------------------------------------------------------
+    # Phase four: houses
+
+    def toggle_house_spot(self, city, spot):
+        """Select a free house spot, or deselect it when it is already selected."""
+        with self._lock:
+            if self._state.current_action != BUILDING_HOUSES:
+                return ErrorCode.E_NOT_OKAY
+
+            spots = self._state.map_houses.get(city)
+
+            if spots is None or spot not in spots or spots[spot] is not None:
+                return ErrorCode.E_NOT_OKAY
+
+            selection = {"city": city, "spot": spot}
+
+            if selection in self._state.pending_houses:
+                self._state.pending_houses.remove(selection)
+            else:
+                self._state.pending_houses.append(selection)
+
+            return ErrorCode.E_OK
 
     def buy_houses(self, player):
-        def buy_selected_houses(state):
+        def rule(state):
             return buy_houses(state, player, state.pending_houses)
 
-        return self._current_player_action(
-            player,
-            "building_houses",
-            buy_selected_houses,
-        )
+        return self._play_turn(player, BUILDING_HOUSES, rule)
+
+    # ---------------------------------------------------------------------------------------------
+    # Phase five: bureaucracy
+
+    def toggle_ready_to_power(self, player, plant_id):
+        """Flip whether a plant of the player is ready to produce power."""
+        with self._lock:
+            plant = find_player_plant(self._state, player, plant_id)
+
+            if plant is None:
+                return ErrorCode.E_NOT_OKAY
+
+            plant["ready_to_power"] = not plant["ready_to_power"]
+
+            return ErrorCode.E_OK
 
     def bureaucracy(self, player):
-        return self._current_player_action(player, "bureaucracy", bureaucracy)
+        def rule(state):
+            return bureaucracy(state, player)
+
+        return self._play_turn(player, BUREAUCRACY, rule)
+
+    # ---------------------------------------------------------------------------------------------
+    # Any phase
+
+    def transfer_resource(self, player, source_plant_id, source_slot, target_plant_id, target_slot):
+        """Move one fuel unit between two plants of the player."""
+        with self._lock:
+            return transfer_plant_resource(
+                self._state,
+                player,
+                source_plant_id,
+                source_slot,
+                target_plant_id,
+                target_slot,
+                load_plant_deck(),
+                load_resources()["resources"],
+            )

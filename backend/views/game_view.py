@@ -12,8 +12,13 @@ from backend.data.files import (
 from backend.rules.common.game_state import GameState
 from backend.rules.common.phase_state import phase_key
 from backend.views.map_view import build_map_view
-from backend.views.market_view import money_view, replenishment_view, resource_market_view
-from backend.views.plant_view import plant_card
+from backend.views.market_view import (
+    money_view,
+    next_card_back_view,
+    power_plant_market_view,
+    replenishment_view,
+    resource_market_view,
+)
 from backend.views.player_view import player_color, player_label, player_row
 
 # -------------------------------------------------------------------------------------------------
@@ -35,19 +40,19 @@ def load_config():
 # -------------------------------------------------------------------------------------------------
 # Header
 
-def header_view(config, state, game_state):
+def header_view(config, state: GameState):
     """Describe the header: the turn order and what the current player is doing."""
-    current = state["current_player"]
-    phase = phase_key(game_state.current_action)
-    finished_players = set(game_state.phase_finished_players.get(phase, []))
-
+    current = state.current_player
+    phase = phase_key(state.current_action)
+    finished_players = state.phase_finished_players.get(phase, [])
     turn_order = []
 
-    for player in state["player_turn_order"]:
+    for player in state.player_turn_order:
         classes = ["turn-order-player"]
 
         if player == current:
             classes.append("current")
+
         if player in finished_players:
             classes.append("finished")
 
@@ -55,88 +60,55 @@ def header_view(config, state, game_state):
             "label": player_label(state, player),
             "color": player_color(config, state, player),
             "current": player == current,
-            "finished": "finished" in classes,
+            "finished": player in finished_players,
             "classes": classes,
         })
 
-    action = state["current_action"]
+    action = state.current_action
     action_label = config["text"]["action_labels"].get(action, action)
 
     return {
         "turn_order": turn_order,
         "placement_status": f"{action_label} · {player_label(state, current)}",
-        "cycles": game_state.cycles,
-    }
-
-# -------------------------------------------------------------------------------------------------
-# Next card back
-
-def next_card_back_view(config, back):
-    """Describe the back of the top draw-pile card, if one remains."""
-    text = config["text"]
-    classes = ["info-card", "next-card-back"]
-    label = ""
-
-    if back is not None:
-        classes.append(back)
-        label = text["back_of_the_card"][back]
-
-    return {
-        "heading": text["next_card_heading"],
-        "classes": classes,
-        "label": label,
+        "cycles": state.cycles,
     }
 
 # -------------------------------------------------------------------------------------------------
 # Whole page
 
-def build_view(game_state: GameState):
+def build_view(state: GameState):
     """Describe everything the UI shows, built from the game state and the static JSON files."""
-    state = game_state.to_dict()
     config = load_config()
     deck = load_plant_deck()
 
-    players = {}
-    board_order = list(state["player_colors"] or state["player_aliases"])
-    for player in board_order:
-        players[player] = {"label": player_label(state, player), "color": player_color(config, state, player)}
+    # The board shows players in a fixed roster order, which never changes with the turn order.
+    board_order = list(state.player_colors or state.player_aliases)
 
-    selected = set()
-    for house in state["pending_houses"]:
-        selected.add((house["city"], house["spot"]))
+    players = {}
+
+    for player in board_order:
+        players[player] = {
+            "label": player_label(state, player),
+            "color": player_color(config, state, player),
+        }
+
+    selected_spots = set()
+
+    for house in state.pending_houses:
+        selected_spots.add((house["city"], house["spot"]))
 
     player_rows = []
+
     for player in board_order[:config["rules"]["max_players_on_board"]]:
-        player_rows.append(player_row(config, state, player, deck, game_state))
-
-    market_cards = []
-    for plant_id in state["power_plant_market"]:
-        card = plant_card(config, plant_id, deck.get(plant_id), False)
-        card["selectable"] = (
-            game_state.current_action == "power_plant_auction"
-            and game_state.current_player not in game_state.players_bought_power_plant
-            and game_state.current_player not in game_state.auction_skipped
-            and game_state.player_money[game_state.current_player] >= plant_id
-        )
-        card["selected"] = plant_id == game_state.selected_power_plant
-
-        if card["selectable"]:
-            card["classes"].append("selectable")
-        if card["selected"]:
-            card["classes"].append("selected")
-
-        market_cards.append(card)
-
-    next_plant = deck.get(game_state.power_plant_deck[0]) if game_state.power_plant_deck else None
-    next_card_back = next_plant["back_of_the_card"] if next_plant else None
+        player_rows.append(player_row(config, state, player, deck))
 
     return {
-        "map": build_map_view(config, load_map(), state["map_houses"], players, selected),
-        "header": header_view(config, state, game_state),
+        "map": build_map_view(config, load_map(), state.map_houses, players, selected_spots),
+        "header": header_view(config, state),
         "players": player_rows,
-        "power_plant_market": market_cards,
+        "power_plant_market": power_plant_market_view(config, state, deck),
         "resource_market": resource_market_view(config, state),
-        "next_card_back": next_card_back_view(config, next_card_back),
+        "next_card_back": next_card_back_view(config, state, deck),
         "money": money_view(load_money()),
         "replenishment": replenishment_view(config, state, load_replenishment()),
     }

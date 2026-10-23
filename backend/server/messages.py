@@ -13,6 +13,8 @@ POWER_PLANT_READY_UPDATED = "Power Plant Ready State Updated"
 POWER_PLANT_SELECTED = "Power Plant Selected"
 POWER_PLANT_DISCARDED = "Power Plant Discarded"
 GAME_SAVED = "Game Saved"
+BID_PLACED = "Bid Placed"
+PASSED = "Passed"
 
 # -------------------------------------------------------------------------------------------------
 # Placeholder messages
@@ -20,8 +22,6 @@ GAME_SAVED = "Game Saved"
 PLACEHOLDER_HOUSE_PURCHASE = "Placeholder: House Purchase"
 PLACEHOLDER_RESOURCE_PRICE = "Placeholder: Resource Price"
 PLACEHOLDER_RESOURCE_PURCHASE = "Placeholder: Resource Purchase"
-PLACEHOLDER_BID = "Placeholder: Bid"
-PLACEHOLDER_PASS = "Placeholder: Pass"
 PLACEHOLDER_BUREAUCRACY = "Placeholder: Bureaucracy"
 
 # -------------------------------------------------------------------------------------------------

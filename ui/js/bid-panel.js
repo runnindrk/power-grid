@@ -19,17 +19,17 @@ export function createBidPanel(player, refresh) {
     'aria-label': bid.input_aria_label,
   });
   const field = htmlElement('label', { className: 'bid-field' });
-  field.append(htmlElement('span', { textContent: 'Bid $' }), input);
+  field.append(htmlElement('span', { textContent: bid.amount_label }), input);
 
   const bidButton = htmlElement('button', {
     className: 'bid-submit',
     type: 'submit',
-    textContent: 'Bid',
+    textContent: bid.bid_label,
   });
   const passButton = htmlElement('button', {
     className: 'bid-pass',
     type: 'button',
-    textContent: 'Out',
+    textContent: bid.pass_label,
   });
   const status = htmlElement('span', {
     className: 'bid-status',

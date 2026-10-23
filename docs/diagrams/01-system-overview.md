@@ -10,8 +10,8 @@ flowchart LR
         UI --> API
     end
 
-    subgraph Server["Flask server (backend/server/main.py)"]
-        Routes["Routes: GET /api/view, POST actions"]
+    subgraph Server["Flask server (backend/server/)"]
+        Routes["routes.py: GET /api/view, POST actions"]
         Views["views/: build the view"]
         Service["application/game_service.py: coordinate commands and state"]
         Rules["rules/phase_*/ and rules/common/"]

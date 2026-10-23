@@ -4,7 +4,7 @@
 import json
 
 from backend.data.files import GAME_STATE_PATH, load_settings, read_json
-from backend.rules.common.game_state import GameState
+from backend.rules.common.game_state import GameState, default_player_colors
 
 # -------------------------------------------------------------------------------------------------
 # Game state persistence
@@ -12,12 +12,11 @@ from backend.rules.common.game_state import GameState
 def load_game_state():
     """Load the saved game into the Python state structure."""
     state = GameState(**read_json(GAME_STATE_PATH))
+
+    # Older saves have no colors yet; they are given once, in roster order.
     if not state.player_colors:
         palette = load_settings()["display"]["player_colors"]
-        state.player_colors = {
-            player: palette[index % len(palette)]
-            for index, player in enumerate(state.player_aliases)
-        }
+        state.player_colors = default_player_colors(state.player_aliases, palette)
 
     return state
 

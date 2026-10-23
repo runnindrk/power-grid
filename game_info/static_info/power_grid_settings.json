@@ -17,6 +17,11 @@
         "price_format": "${price}",
         "money_format": "${money}",
         "no_bid_yet": "No bid yet",
+        "highest_bid": "Highest bid: {bid}",
+        "bid_amount": "Bid $",
+        "bid_button": "Bid",
+        "pass_button": "Out",
+        "buy_button": "Buy",
         "in_network": "in Network",
         "no_fuel": "No Fuel",
         "empty_plant_slot": "Empty",
@@ -32,6 +37,8 @@
         "action_labels": {
             "determining_player_order": "Determining Player Order",
             "power_plant_auction": "Power Plant Auction",
+            "power_plant_bidding": "Power Plant Bidding",
+            "discard_power_plant": "Discarding Power Plant",
             "buying_resources": "Buying Resources",
             "building_houses": "Building Houses",
             "bureaucracy": "Bureaucracy"

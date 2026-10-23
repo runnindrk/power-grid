@@ -1,56 +1,51 @@
 import unittest
-from copy import deepcopy
 
 from backend.data.game_state_store import load_game_state
 from backend.views.game_view import build_view
 
 
+def colors_by_player(view):
+    """Return the color of every player row in the view."""
+    colors = {}
+
+    for row in view["players"]:
+        colors[row["player"]] = row["color"]
+
+    return colors
+
+
+def row_order(view):
+    """Return the players in the order of the player board."""
+    return [row["player"] for row in view["players"]]
+
+
 class PlayerColorTests(unittest.TestCase):
-    # Player colors remain tied to identity after the turn order changes.
+    # Player colors stay tied to the player after the turn order changes.
     def test_colors_stay_with_players_after_turn_order_shuffle(self):
-        state = deepcopy(load_game_state())
-        original_colors = {
-            player["player"]: player["color"]
-            for player in build_view(state)["players"]
-        }
-        original_row_order = [player["player"] for player in build_view(state)["players"]]
+        state = load_game_state()
+        before = build_view(state)
+
         state.player_turn_order.reverse()
-        view = build_view(state)
-        reordered_colors = {
-            player["player"]: player["color"]
-            for player in view["players"]
-        }
-        reordered_row_order = [player["player"] for player in view["players"]]
-        turn_order = [player["label"] for player in view["header"]["turn_order"]]
+        after = build_view(state)
 
-        self.assertEqual(reordered_colors, original_colors)
-        self.assertEqual(reordered_row_order, original_row_order)
-        self.assertEqual(
-            turn_order,
-            [state.player_aliases[player] for player in state.player_turn_order],
-        )
+        turn_order_labels = [player["label"] for player in after["header"]["turn_order"]]
+        expected_labels = [state.player_aliases[player] for player in state.player_turn_order]
 
-    # Older saves without a color map use the stable player roster as a fallback.
+        self.assertEqual(colors_by_player(after), colors_by_player(before))
+        self.assertEqual(row_order(after), row_order(before))
+        self.assertEqual(turn_order_labels, expected_labels)
+
+    # Older saves without colors use the stable player roster as a fallback.
     def test_legacy_state_uses_stable_roster_colors(self):
-        state = deepcopy(load_game_state())
+        state = load_game_state()
         state.player_colors = {}
-        original_colors = {
-            player["player"]: player["color"]
-            for player in build_view(state)["players"]
-        }
-        original_row_order = [player["player"] for player in build_view(state)["players"]]
-        state.player_turn_order.reverse()
-        view = build_view(state)
-        reordered_colors = {
-            player["player"]: player["color"]
-            for player in view["players"]
-        }
+        before = build_view(state)
 
-        self.assertEqual(reordered_colors, original_colors)
-        self.assertEqual(
-            [player["player"] for player in view["players"]],
-            original_row_order,
-        )
+        state.player_turn_order.reverse()
+        after = build_view(state)
+
+        self.assertEqual(colors_by_player(after), colors_by_player(before))
+        self.assertEqual(row_order(after), row_order(before))
 
 
 if __name__ == "__main__":
