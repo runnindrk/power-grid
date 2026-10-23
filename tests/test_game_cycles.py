@@ -15,6 +15,7 @@ from backend.rules.phase_one_turn_order.initial_order import determine_initial_o
 from backend.rules.phase_two_auction.auction import finish_auction
 from backend.server.app import create_app
 from tests.helpers import new_service
+from backend.views.game_view import build_view
 
 
 class GameCycleTests(unittest.TestCase):
@@ -108,17 +109,34 @@ class GameCycleTests(unittest.TestCase):
 
         self.assertEqual(state.phase, 4)
         self.assertEqual(state.current_action, BUILDING_HOUSES)
-        self.assertEqual(state.current_player, state.player_turn_order[0])
+        self.assertEqual(state.current_player, state.player_turn_order[-1])
+        house_order = []
 
         for _ in state.player_turn_order:
+            house_order.append(state.current_player)
             self.assertEqual(service.buy_houses(state.current_player), ErrorCode.E_OK)
+
+        self.assertEqual(house_order, list(reversed(state.player_turn_order)))
 
         self.assertEqual(state.phase, 5)
         self.assertEqual(state.current_action, BUREAUCRACY)
-        self.assertEqual(state.current_player, state.player_turn_order[0])
+        waiting_view = build_view(state)
+        self.assertFalse(waiting_view["header"]["show_turn_order"])
+        self.assertFalse(waiting_view["header"]["turn_order"])
+        self.assertIn("Waiting for all players", waiting_view["header"]["placement_status"])
+        self.assertTrue(all(player["can_power"] for player in waiting_view["players"]))
 
-        for _ in state.player_turn_order:
-            self.assertEqual(service.bureaucracy(state.current_player), ErrorCode.E_OK)
+        first_power_player = state.player_turn_order[1]
+        self.assertEqual(service.bureaucracy(first_power_player), ErrorCode.E_OK)
+        self.assertEqual(service.bureaucracy(first_power_player), ErrorCode.E_NOT_OKAY)
+        after_first_power = build_view(state)
+        power_buttons = {player["player"]: player["can_power"] for player in after_first_power["players"]}
+        self.assertFalse(power_buttons[first_power_player])
+        self.assertTrue(all(power_buttons[player] for player in state.player_turn_order if player != first_power_player))
+
+        for player in state.player_turn_order:
+            if player != first_power_player:
+                self.assertEqual(service.bureaucracy(player), ErrorCode.E_OK)
 
         self.assertEqual(state.cycles, 2)
         self.assertEqual(state.phase, 2)

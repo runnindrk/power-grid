@@ -80,22 +80,31 @@ class GameService:
         """Run a rule for the current player, end their turn and move on when everyone is done."""
         with self._lock:
             # Stale requests are rejected before the rule can change anything.
-            if player != self._state.current_player:
-                return ErrorCode.E_NOT_OKAY
             if player not in self._state.player_turn_order:
                 return ErrorCode.E_NOT_OKAY
             if self._state.current_action != required_action:
                 return ErrorCode.E_NOT_OKAY
+
+            phase = phase_key(required_action)
+
+            if required_action != BUREAUCRACY and player != self._state.current_player:
+                return ErrorCode.E_NOT_OKAY
+            if required_action == BUREAUCRACY:
+                finished_players = self._state.phase_finished_players.get(phase, [])
+
+                if player in finished_players:
+                    return ErrorCode.E_NOT_OKAY
 
             code = rule(self._state)
 
             if code != ErrorCode.E_OK:
                 return code
 
-            phase = phase_key(required_action)
             mark_phase_finished(self._state, phase, player)
-            if required_action == BUYING_RESOURCES:
+            if required_action in (BUYING_RESOURCES, BUILDING_HOUSES):
                 code = advance_turn_reverse(self._state, player)
+            elif required_action == BUREAUCRACY:
+                code = ErrorCode.E_OK
             else:
                 code = advance_turn(self._state, player)
 

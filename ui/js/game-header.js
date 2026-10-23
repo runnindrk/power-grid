@@ -2,7 +2,12 @@ export function renderHeader(header) {
   const turnOrder = document.getElementById('turn-order');
   document.getElementById('cycles').textContent = 'Cycles: ' + header.cycles;
 
-  turnOrder.replaceChildren(document.createTextNode('Turn order: '));
+  turnOrder.hidden = header.show_turn_order === false;
+  turnOrder.replaceChildren();
+
+  if (header.show_turn_order !== false) {
+    turnOrder.appendChild(document.createTextNode('Turn order: '));
+  }
 
   for (let index = 0; index < header.turn_order.length; index += 1) {
     const player = header.turn_order[index];

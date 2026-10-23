@@ -40,7 +40,7 @@ def start_phase_four(state):
     """Start building houses."""
     state.phase = 4
     state.current_action = BUILDING_HOUSES
-    state.current_player = state.player_turn_order[0]
+    state.current_player = state.player_turn_order[-1]
 
 
 def start_phase_five(state):

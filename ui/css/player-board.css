@@ -155,6 +155,13 @@
   font-weight: 700;
   cursor: pointer;
 }
+.player-power-button:disabled {
+  border-color: #3a404b;
+  background: #1a1d24;
+  color: #777e89;
+  opacity: 0.55;
+  cursor: default;
+}
 .player-buy-houses-button:disabled {
   opacity: 0.5;
   cursor: default;

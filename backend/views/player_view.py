@@ -6,6 +6,7 @@ from backend.rules.common.constants import (
     BUREAUCRACY,
     BUYING_RESOURCES,
     DISCARD_POWER_PLANT,
+    PHASE_FIVE_BUREAUCRACY,
     POWER_PLANT_AUCTION,
     POWER_PLANT_BIDDING,
 )
@@ -181,11 +182,12 @@ def player_row(config, state: GameState, player, deck):
     alias = player_label(state, player)
     money = state.player_money[player]
     is_current = player == state.current_player
+    bureaucracy_finished = state.phase_finished_players.get(PHASE_FIVE_BUREAUCRACY, [])
 
     return {
         "player": player,
         "is_current_player": is_current,
-        "can_power": is_current and state.current_action == BUREAUCRACY,
+        "can_power": state.current_action == BUREAUCRACY and player not in bureaucracy_finished,
         "label": alias,
         "aria_label": f"Player {alias}",
         "color": player_color(config, state, player),
