@@ -4,6 +4,7 @@ from backend.rules.common.constants import (
     BUYING_RESOURCES,
     DISCARD_POWER_PLANT,
     POWER_PLANT_AUCTION,
+    POWER_PLANT_BIDDING,
     PHASE_THREE_RESOURCE_BUYING,
     PHASE_FOUR_BUILDING_HOUSES,
 )
@@ -27,8 +28,54 @@ class AuctionWorkflowTests(unittest.TestCase):
 
         return find_by_label(header, self.state.player_aliases[player])
 
+    def test_passed_bidder_gets_black_line_without_finishing_auction_phase(self):
+        starter, passed_player, _, _ = self.state.player_turn_order
+        plant_id = self.state.power_plant_market[0]
+        self.state.current_action = POWER_PLANT_BIDDING
+        self.state.current_player = passed_player
+        self.state.auction_starter = starter
+        self.state.selected_power_plant = plant_id
+        self.state.auction_participants = list(self.state.player_turn_order)
+        self.state.auction_bids = {starter: plant_id}
+
+        self.assertEqual(self.post("/api/bid/pass", player=passed_player), 200)
+
+        row = self.header_row(passed_player)
+        self.assertIn("passed", row["classes"])
+        self.assertNotIn("finished", row["classes"])
+        self.assertIn(passed_player, self.state.auction_passed)
+        self.assertNotIn(passed_player, self.state.phase_finished_players.get("phase_two_auction", []))
+
+    def test_cycle_zero_selector_cannot_pass_but_later_cycles_can(self):
+        starter, opponent, _, _ = self.state.player_turn_order
+        plant_id = self.state.power_plant_market[0]
+        self.state.current_action = POWER_PLANT_BIDDING
+        self.state.current_player = starter
+        self.state.auction_starter = starter
+        self.state.selected_power_plant = plant_id
+        self.state.auction_participants = list(self.state.player_turn_order)
+        self.state.auction_bids = {starter: plant_id}
+
+        starter_view = find_by_label(
+            self.client.get("/api/view").get_json()["players"],
+            self.state.player_aliases[starter],
+        )
+        self.assertTrue(starter_view["bid"]["pass_disabled"])
+        self.assertEqual(self.post("/api/bid/pass", player=starter), 400)
+        self.assertNotIn(starter, self.state.auction_passed)
+
+        self.state.current_player = opponent
+        self.assertEqual(self.post("/api/bid/pass", player=opponent), 200)
+        self.assertIn(opponent, self.state.auction_passed)
+
+        self.state.cycles = 1
+        self.state.current_player = starter
+        self.assertEqual(self.post("/api/bid/pass", player=starter), 200)
+        self.assertIn(starter, self.state.auction_passed)
+
     # A different winner leaves the selector active; the buyer sits out later auctions.
     def test_selector_continues_after_another_player_wins(self):
+        self.state.cycles = 1
         p1, p2, p3, p4 = self.state.player_turn_order
         self.state.current_player = p2
         plant_id = self.state.power_plant_market[0]
@@ -55,8 +102,31 @@ class AuctionWorkflowTests(unittest.TestCase):
         self.assertEqual(self.post("/api/plant/select", plant_id=second_plant_id), 200)
         self.assertNotIn(p3, self.state.auction_participants)
 
+    def test_cycle_zero_selector_cannot_pass_during_bidding(self):
+        starter, opponent, _, _ = self.state.player_turn_order
+        plant_id = self.state.power_plant_market[0]
+        self.state.current_action = POWER_PLANT_BIDDING
+        self.state.current_player = starter
+        self.state.auction_starter = starter
+        self.state.selected_power_plant = plant_id
+        self.state.auction_participants = list(self.state.player_turn_order)
+        self.state.auction_bids = {starter: plant_id}
+
+        starter_view = find_by_label(
+            self.client.get("/api/view").get_json()["players"],
+            self.state.player_aliases[starter],
+        )
+        self.assertTrue(starter_view["bid"]["pass_disabled"])
+        self.assertEqual(self.post("/api/bid/pass", player=starter), 400)
+        self.assertNotIn(starter, self.state.auction_passed)
+
+        self.state.current_player = opponent
+        self.assertEqual(self.post("/api/bid/pass", player=opponent), 200)
+        self.assertIn(opponent, self.state.auction_passed)
+
     # A winner with full plant slots must discard one before the auction resumes.
     def test_full_plant_slots_require_discard(self):
+        self.state.cycles = 1
         p1, p2, p3, p4 = self.state.player_turn_order
         existing_plant_ids = [31, 46, 50]
 
@@ -112,6 +182,18 @@ class AuctionWorkflowTests(unittest.TestCase):
 
     # Passing on selection through the whole turn order starts resource buying.
     def test_all_selectors_pass(self):
+        for player in self.state.player_turn_order:
+            self.assertEqual(self.post("/api/bid/pass", player=player), 200)
+
+        self.assertEqual(self.state.current_action, BUYING_RESOURCES)
+        self.assertEqual(self.state.phase, 3)
+        self.assertIsNone(self.state.selected_power_plant)
+        self.assertFalse(self.state.players_bought_power_plant)
+
+    # Later cycles allow every remaining selector to pass and end the auction.
+    def test_later_cycle_all_selectors_pass(self):
+        self.state.cycles = 1
+
         for player in self.state.player_turn_order:
             self.assertEqual(self.post("/api/bid/pass", player=player), 200)
 

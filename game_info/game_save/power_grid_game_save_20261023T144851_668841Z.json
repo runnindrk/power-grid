@@ -1,24 +1,55 @@
 {
     "number_of_players": 4,
     "regions_chosen": [
+        "orange",
+        "yellow",
         "blue",
-        "red",
-        "green",
-        "orange"
+        "green"
     ],
     "rounds_played": 0,
-    "cycles": 0,
     "step": 1,
-    "phase": 1,
+    "phase": 2,
     "power_plant_market": [
         3,
-        4,
         5,
-        6,
+        7,
         8,
         9,
-        11,
-        15
+        10,
+        12,
+        13
+    ],
+    "power_plant_deck": [
+        4,
+        15,
+        42,
+        25,
+        19,
+        21,
+        32,
+        35,
+        30,
+        29,
+        34,
+        37,
+        36,
+        20,
+        50,
+        40,
+        14,
+        27,
+        22,
+        23,
+        17,
+        31,
+        44,
+        16,
+        38,
+        39,
+        28,
+        24,
+        26,
+        6
     ],
     "resource_market": {
         "coal": 24,
@@ -27,24 +58,18 @@
         "uranium": 2
     },
     "player_turn_order": [
-        "p1",
         "p2",
+        "p1",
         "p3",
         "p4"
     ],
     "current_player": "p2",
-    "current_action": "determining_player_order",
+    "current_action": "power_plant_auction",
     "player_aliases": {
         "p1": "Diogo",
         "p2": "João",
         "p3": "Inês",
         "p4": "Rita"
-    },
-    "player_colors": {
-        "p1": "#e85d5d",
-        "p2": "#519cde",
-        "p3": "#43a047",
-        "p4": "#fb8c00"
     },
     "player_money": {
         "p1": 50,
@@ -60,7 +85,7 @@
     },
     "map_houses": {
         "Flensburg": {
-            "spot_1": "p1",
+            "spot_1": null,
             "spot_2": null,
             "spot_3": null
         },
@@ -100,9 +125,9 @@
             "spot_3": null
         },
         "Schwerin": {
-            "spot_1": "p1",
-            "spot_2": "p3",
-            "spot_3": "p2"
+            "spot_1": null,
+            "spot_2": null,
+            "spot_3": null
         },
         "Rostock": {
             "spot_1": null,
@@ -271,43 +296,27 @@
         }
     },
     "pending_houses": [],
-    "selected_power_plant": null,
-    "power_plant_deck": [
-        14,
-        31,
-        46,
-        22,
-        27,
-        26,
-        13,
-        33,
-        19,
-        17,
-        34,
-        23,
-        37,
-        38,
-        40,
-        50,
-        10,
-        35,
-        20,
-        7,
-        32,
-        16,
-        30,
-        24,
-        21,
-        36,
-        25,
-        44,
-        42,
-        39
-    ],
+    "cycles": 0,
+    "player_colors": {
+        "p1": "#e85d5d",
+        "p2": "#519cde",
+        "p3": "#43a047",
+        "p4": "#fb8c00"
+    },
     "removed_power_plants": [
-        12,
+        11,
+        46,
         18,
-        28,
-        29
-    ]
+        33
+    ],
+    "game_started": true,
+    "auction_starter": null,
+    "selected_power_plant": null,
+    "auction_participants": [],
+    "auction_bids": {},
+    "auction_passed": [],
+    "auction_skipped": [],
+    "players_bought_power_plant": [],
+    "phase_finished_players": {},
+    "pending_plant_replacement": null
 }

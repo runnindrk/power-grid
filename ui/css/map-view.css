@@ -13,6 +13,11 @@
   stroke: var(--line-highlight);
   stroke-width: 3.5;
 }
+.connection-line.inactive,
+.cost-bg.inactive,
+.cost-label.inactive {
+  opacity: 0.18;
+}
 .cost-bg {
   fill: #1a1d24;
   stroke-width: 1;
@@ -28,6 +33,10 @@
 }
 .city-node {
   cursor: pointer;
+}
+.city-node.inactive {
+  opacity: 0.22;
+  pointer-events: none;
 }
 .house-spot {
   cursor: pointer;

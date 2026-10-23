@@ -22,6 +22,10 @@ export function renderHeader(header) {
       playerTurn.setAttribute('aria-current', 'true');
     }
 
+    if (player.passed) {
+      playerTurn.title = 'Passed on this plant';
+    }
+
     turnOrder.appendChild(playerTurn);
   }
 

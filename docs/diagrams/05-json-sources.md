@@ -5,9 +5,10 @@ Which JSON file feeds which part of the screen.
 ```mermaid
 flowchart LR
     State["rules/game_state.py: in-memory game state"]
-    Save[("power_grid_game_state.json: written as a save-game snapshot")]
+    Saves[("game_save/power_grid_game_save_<timestamp>.json: timestamped snapshots")]
     Settings["power_grid_settings.json"]
     Resources["power_grid_resource_prices.json"]
+    Areas["power_grid_number_of_areas.json"]
     Deck["power_grid_deck_set_0.json"]
     Removal["power_grid_plant_removal.json"]
     Money["power_grid_money.json"]
@@ -23,6 +24,10 @@ flowchart LR
     Settings --> Texts["All labels and messages"]
     Settings --> Colors["Player, region and cost colors"]
     Settings --> Limits["Max players, plant slots, min bid"]
+    Areas --> ActiveRegions["Playable region count by player count"]
+    State --> ChosenRegions["Chosen connected regions"]
+    ActiveRegions --> PlayableCities["Active city spots; other regions are greyed out"]
+    ChosenRegions --> PlayableCities
 
     Resources --> Racks["Resource racks, buy rows, fuel types, capacities"]
     Resources --> Scales["Price scales"]
@@ -33,7 +38,7 @@ flowchart LR
     Money --> Income["Income table"]
     Replen --> Rates["Replenishment table"]
     Map --> Geometry["City positions, connection costs"]
-    State -->|write snapshot| Save
+    State -->|write timestamped snapshot| Saves
 ```
 
 [Back to documentation](../index.md)

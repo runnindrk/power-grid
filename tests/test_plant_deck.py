@@ -76,6 +76,7 @@ class PlantDeckTests(unittest.TestCase):
 
     # Buying a plant draws the next card into the market and moves the top of the pile.
     def test_award_refills_market_from_deck(self):
+        self.state.cycles = 1
         p1, p2, p3, p4 = self.state.player_turn_order
         purchased_plant = self.state.power_plant_market[0]
         drawn_plant = self.state.power_plant_deck[0]

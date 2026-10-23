@@ -104,7 +104,7 @@ def connections_from_matrix(matrix):
     return connections
 
 
-def connection_views(cities, connections, cost_colors):
+def connection_views(cities, connections, cost_colors, active_regions):
     """Return the lines between cities, and the cost labels drawn on the lines that have a cost."""
     costs = []
 
@@ -121,9 +121,17 @@ def connection_views(cities, connections, cost_colors):
         first, second, cost = connections[index]
         start = cities[first]
         end = cities[second]
+        inactive = (
+            start["region"].casefold() not in active_regions
+            or end["region"].casefold() not in active_regions
+        )
+        classes = ["connection-line"]
+
+        if inactive:
+            classes.append("inactive")
 
         lines.append({
-            "id": f"connection-{index}",
+            "id": f"connection-{index}", "classes": classes,
             "x1": start["x"], "y1": start["y"], "x2": end["x"], "y2": end["y"],
         })
 
@@ -139,6 +147,7 @@ def connection_views(cities, connections, cost_colors):
             "text": text,
             "radius": max(6.5, len(text) * 2.5 + 4),
             "color": cost_color(cost, minimum, maximum, cost_colors),
+            "inactive": inactive,
         })
 
     return lines, cost_labels
@@ -146,7 +155,7 @@ def connection_views(cities, connections, cost_colors):
 # -------------------------------------------------------------------------------------------------
 # House spots
 
-def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected):
+def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active):
     """Describe one house spot of a city: its shape, its owner color and whether it is selected."""
     display = config["display"]
     arc = 360 / spot_count
@@ -169,13 +178,16 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
     if is_selected:
         classes.append("selected")
 
+    if not active:
+        classes.append("inactive")
+
     return {
         "spot": spot,
         "city": city["name"],
         "classes": classes,
         "owner": owner,
         "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}",
-        "aria_disabled": bool(owner),
+        "aria_disabled": bool(owner) or not active,
         "aria_pressed": is_selected,
         "face_path": wedge_path(city["x"], city["y"], display["map"]["spot_radius"], start_angle, start_angle + arc),
         "face_fill": face_fill,
@@ -186,18 +198,21 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
 # -------------------------------------------------------------------------------------------------
 # City view
 
-def city_view(config, index, city, houses, connections, players, selected):
+def city_view(config, index, city, houses, connections, players, selected, active_regions):
     """Describe a city: its house spots, its label, its tooltip and the lines to highlight when hovered."""
     display = config["display"]
     text = config["text"]
 
     spot_names = list(houses.keys())
+    active = city["region"].casefold() in active_regions
     spots = []
     owned = 0
 
     for spot_index in range(len(spot_names)):
         spot = spot_names[spot_index]
-        spots.append(spot_view(config, city, spot_index, len(spot_names), spot, houses[spot], players, selected))
+        spots.append(spot_view(
+            config, city, spot_index, len(spot_names), spot, houses[spot], players, selected, active,
+        ))
 
         if houses[spot]:
             owned += 1
@@ -220,9 +235,18 @@ def city_view(config, index, city, houses, connections, players, selected):
     if city["region"] in display["region_colors"]:
         label_color = display["region_colors"][city["region"]]
 
+    classes = ["city-node"]
+
+    if not active:
+        classes.append("inactive")
+
     return {
         "index": index,
         "name": city["name"],
+        "region": city["region"],
+        "active": active,
+        "classes": classes,
+        "aria_disabled": not active,
         "x": city["x"],
         "y": city["y"],
         "label_y": city["y"] + display["map"]["city_label_offset"],
@@ -242,7 +266,7 @@ def city_view(config, index, city, houses, connections, players, selected):
 # -------------------------------------------------------------------------------------------------
 # Whole map
 
-def build_map_view(config, map_data, map_houses, players, selected):
+def build_map_view(config, map_data, map_houses, players, selected, active_regions):
     """Describe the whole map: size, cities with their house spots, lines and cost labels."""
     map_settings = config["display"]["map"]
     scale = map_settings["scale"]
@@ -251,13 +275,17 @@ def build_map_view(config, map_data, map_houses, players, selected):
 
     cities = scaled_cities(map_data, scale)
     connections = connections_from_matrix(map_data["connection_matrix"])
-    lines, cost_labels = connection_views(cities, connections, config["display"]["cost_colors"])
+    lines, cost_labels = connection_views(
+        cities, connections, config["display"]["cost_colors"], active_regions,
+    )
 
     city_views = []
 
     for index in range(len(cities)):
         houses = map_houses[cities[index]["name"]]
-        city_views.append(city_view(config, index, cities[index], houses, connections, players, selected))
+        city_views.append(city_view(
+            config, index, cities[index], houses, connections, players, selected, active_regions,
+        ))
 
     text = config["text"]
 

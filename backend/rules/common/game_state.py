@@ -29,6 +29,7 @@ class GameState:
     cycles: int = 0
     player_colors: dict[str, str] = field(default_factory=dict)
     removed_power_plants: list[int] = field(default_factory=list)
+    game_started: bool = True
 
     # These fields let an in-progress auction resume from a saved game.
     auction_starter: str | None = None

@@ -2,6 +2,7 @@ import random
 import unittest
 
 from backend.data.game_state_store import load_game_state
+from backend.game_setup.new_game import create_new_game_state
 from backend.rules.common.constants import (
     BUILDING_HOUSES,
     BUREAUCRACY,
@@ -16,15 +17,16 @@ from tests.helpers import new_service
 
 
 class GameCycleTests(unittest.TestCase):
-    # Loading a phase-one save randomizes the order once and starts the auction.
-    def test_startup_determines_order_and_enters_phase_two(self):
-        state = load_game_state()
+    # New-game setup explicitly determines order; loading a saved state does not do this.
+    def test_new_game_determines_order_and_enters_phase_two(self):
+        rng = random.Random(7)
+        state = create_new_game_state(4, rng=rng)
         original_players = sorted(state.player_turn_order)
 
         self.assertEqual(state.phase, 1)
         self.assertEqual(state.current_action, DETERMINING_PLAYER_ORDER)
 
-        new_service(state, rng=random.Random(7))
+        self.assertEqual(determine_initial_order(state, rng), ErrorCode.E_OK)
 
         self.assertEqual(state.phase, 2)
         self.assertEqual(state.current_action, POWER_PLANT_AUCTION)
@@ -32,7 +34,7 @@ class GameCycleTests(unittest.TestCase):
         self.assertEqual(sorted(state.player_turn_order), original_players)
         self.assertEqual(state.cycles, 0)
 
-    # The first auction ends by ordering the resource phase by highest plant.
+    # In the first cycle, the resource-phase order is by highest plant.
     def test_cycle_zero_auction_handoff_orders_by_highest_plant(self):
         state = load_game_state()
         p1, p2, p3, p4 = state.player_turn_order
@@ -86,8 +88,10 @@ class GameCycleTests(unittest.TestCase):
 
     # Phases one to five complete in order before the cycle counter goes up.
     def test_complete_five_phase_cycle_increments_counter_and_resets_order(self):
-        state = load_game_state()
-        service = new_service(state, rng=random.Random(11))
+        rng = random.Random(11)
+        state = create_new_game_state(4, rng=rng)
+        self.assertEqual(determine_initial_order(state, rng), ErrorCode.E_OK)
+        service = new_service(state, rng=rng)
 
         self.assertEqual(state.phase, 2)
         self.assertEqual(state.current_action, POWER_PLANT_AUCTION)

@@ -12,7 +12,8 @@ import { renderResourceMarket } from './resource-market.js';
 
 // Draws the whole page from the view sent by the backend.
 function render(view) {
-  renderMap(view.map, refresh);
+  document.getElementById('save-game').disabled = !view.game_started;
+  renderMap(view.map, refresh, view.game_started);
   renderHeader(view.header);
   renderPlayerBoard(view.players, refresh);
   renderPowerPlantMarket(view.power_plant_market, refresh);

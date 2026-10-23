@@ -22,13 +22,14 @@ function showTooltip(tooltip, city, event) {
   tooltip.style.top = (event.pageY + 14) + 'px';
 }
 
-function createHouseSpot(spot, refresh) {
+function createHouseSpot(spot, refresh, gameStarted) {
+  const disabled = spot.aria_disabled || !gameStarted;
   const group = el('g', {
     class: spot.classes.join(' '),
     role: 'button',
-    tabindex: 0,
+    tabindex: disabled ? -1 : 0,
     'aria-label': spot.aria_label,
-    'aria-disabled': spot.aria_disabled,
+    'aria-disabled': disabled,
     'aria-pressed': spot.aria_pressed,
   });
   const face = el('path', { class: 'house-spot-face', d: spot.face_path, fill: spot.face_fill });
@@ -39,6 +40,8 @@ function createHouseSpot(spot, refresh) {
   group.append(face, mark, title);
 
   function toggleSpot() {
+    if (disabled) return;
+
     postHouseSpot(spot.city, spot.spot).then(refresh);
   }
 
@@ -54,11 +57,15 @@ function createHouseSpot(spot, refresh) {
   return group;
 }
 
-function createCity(city, tooltip, refresh) {
-  const group = el('g', { class: 'city-node', 'data-index': city.index });
+function createCity(city, tooltip, refresh, gameStarted) {
+  const group = el('g', {
+    class: city.classes.join(' '),
+    'data-index': city.index,
+    'aria-disabled': city.aria_disabled,
+  });
 
   for (const spot of city.spots) {
-    group.appendChild(createHouseSpot(spot, refresh));
+    group.appendChild(createHouseSpot(spot, refresh, gameStarted));
   }
 
   const label = el('text', { class: 'city-label', x: city.x, y: city.label_y, fill: city.label_color });
@@ -88,16 +95,21 @@ function createLines(map) {
 
   for (const line of map.lines) {
     layer.appendChild(el('line', {
-      class: 'connection-line', id: line.id, x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2,
+      class: line.classes.join(' '), id: line.id,
+      x1: line.x1, y1: line.y1, x2: line.x2, y2: line.y2,
     }));
   }
 
   for (const label of map.cost_labels) {
     layer.appendChild(el('circle', {
-      class: 'cost-bg', cx: label.x, cy: label.y, r: label.radius, stroke: label.color,
+      class: label.inactive ? 'cost-bg inactive' : 'cost-bg',
+      cx: label.x, cy: label.y, r: label.radius, stroke: label.color,
     }));
 
-    const text = el('text', { class: 'cost-label', id: label.id, x: label.x, y: label.y, fill: label.color });
+    const text = el('text', {
+      class: label.inactive ? 'cost-label inactive' : 'cost-label',
+      id: label.id, x: label.x, y: label.y, fill: label.color,
+    });
 
     text.textContent = label.text;
     layer.appendChild(text);
@@ -106,7 +118,7 @@ function createLines(map) {
   return layer;
 }
 
-export function renderMap(map, refresh) {
+export function renderMap(map, refresh, gameStarted) {
   const svg = document.getElementById('map');
 
   svg.setAttribute('viewBox', '0 0 ' + map.width + ' ' + map.height);
@@ -133,7 +145,7 @@ export function renderMap(map, refresh) {
   const cities = el('g', { id: 'cities' });
 
   for (const city of map.cities) {
-    cities.appendChild(createCity(city, tooltip, refresh));
+    cities.appendChild(createCity(city, tooltip, refresh, gameStarted));
   }
 
   let viewport = document.getElementById('viewport');

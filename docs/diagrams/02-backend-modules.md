@@ -4,9 +4,10 @@ Which backend Python module uses which. Rules never import from `server/`, `view
 
 ```mermaid
 flowchart TD
-    main["server/main.py<br/>starts the real game"]
-    app["server/app.py<br/>create_app(game_service)"]
-    routes["server/routes.py<br/>one route for each action"]
+    main["server/main.py<br/>starts the app without loading a game"]
+    app["server/app.py<br/>create_app(load/save callbacks)"]
+    routes["server/routes.py<br/>new game, load game and actions"]
+    setup["game_setup/new_game.py<br/>fresh randomized state"]
     helpers["server/request_helpers.py<br/>read payload, build reply"]
     service["application/game_service.py<br/>lock, turn checks, phase changes"]
     gview["views/game_view.py<br/>build_view and header"]
@@ -38,10 +39,10 @@ flowchart TD
     end
 
     main --> app
-    main --> service
     main --> store
     app --> routes
     routes --> helpers
+    routes --> setup
     routes --> gview
     routes --> service
 
@@ -82,5 +83,6 @@ flowchart TD
 | What a button or label shows | `views/` and `game_info/static_info/power_grid_settings.json` |
 | A new action name or phase name | `rules/common/constants.py` (and an `action_labels` entry in the settings) |
 | A new URL | `server/routes.py` |
+| Fresh game setup | `game_setup/new_game.py` and `game_setup/` helpers |
 
 [Back to documentation](../index.md)

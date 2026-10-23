@@ -12,9 +12,19 @@ from backend.server.app import create_app
 def new_auction_state():
     """Return a fresh copy of the save game, placed at the start of the power plant auction."""
     state = load_game_state()
+    state.cycles = 0
     state.phase = 2
     state.current_action = POWER_PLANT_AUCTION
     state.current_player = state.player_turn_order[0]
+    state.auction_starter = None
+    state.selected_power_plant = None
+    state.auction_participants = []
+    state.auction_bids = {}
+    state.auction_passed = []
+    state.auction_skipped = []
+    state.players_bought_power_plant = []
+    state.phase_finished_players = {}
+    state.pending_plant_replacement = None
 
     return state
 

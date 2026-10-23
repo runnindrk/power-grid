@@ -237,6 +237,8 @@ def _skip_selection(state: GameState, player):
 
 def _leave_bidding(state: GameState, player, plant_slots_per_player):
     """Leave the bidding; the last bidder left wins the plant."""
+    if state.cycles == 0 and player == state.auction_starter:
+        return ErrorCode.E_NOT_OKAY
     if player not in state.auction_participants or player in state.auction_passed:
         return ErrorCode.E_NOT_OKAY
 

@@ -4,13 +4,16 @@
 from backend.data.files import (
     load_map,
     load_money,
+    load_number_of_areas,
     load_plant_deck,
     load_replenishment,
     load_resources,
     load_settings,
 )
 from backend.rules.common.game_state import GameState
+from backend.rules.common.constants import POWER_PLANT_BIDDING
 from backend.rules.common.phase_state import phase_key
+from backend.rules.common.regions import regions_in_play
 from backend.views.map_view import build_map_view
 from backend.views.market_view import (
     money_view,
@@ -33,6 +36,7 @@ def load_config():
         "rules": settings["rules"],
         "text": settings["text"],
         "display": settings["display"],
+        "number_of_areas": load_number_of_areas(),
         "price_scales": resources["price_scales"],
         "resources": resources["resources"],
     }
@@ -45,6 +49,7 @@ def header_view(config, state: GameState):
     current = state.current_player
     phase = phase_key(state.current_action)
     finished_players = state.phase_finished_players.get(phase, [])
+    passed_players = state.auction_passed if state.current_action == POWER_PLANT_BIDDING else []
     turn_order = []
 
     for player in state.player_turn_order:
@@ -56,11 +61,15 @@ def header_view(config, state: GameState):
         if player in finished_players:
             classes.append("finished")
 
+        if player in passed_players:
+            classes.append("passed")
+
         turn_order.append({
             "label": player_label(state, player),
             "color": player_color(config, state, player),
             "current": player == current,
             "finished": player in finished_players,
+            "passed": player in passed_players,
             "classes": classes,
         })
 
@@ -97,13 +106,16 @@ def build_view(state: GameState):
     for house in state.pending_houses:
         selected_spots.add((house["city"], house["spot"]))
 
+    active_regions = regions_in_play(state, config["number_of_areas"])
+
     player_rows = []
 
     for player in board_order[:config["rules"]["max_players_on_board"]]:
         player_rows.append(player_row(config, state, player, deck))
 
     return {
-        "map": build_map_view(config, load_map(), state.map_houses, players, selected_spots),
+        "game_started": state.game_started,
+        "map": build_map_view(config, load_map(), state.map_houses, players, selected_spots, active_regions),
         "header": header_view(config, state),
         "players": player_rows,
         "power_plant_market": power_plant_market_view(config, state, deck),

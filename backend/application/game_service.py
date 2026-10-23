@@ -4,7 +4,7 @@
 from copy import deepcopy
 from threading import RLock
 
-from backend.data.files import load_plant_deck, load_resources
+from backend.data.files import load_map, load_number_of_areas, load_plant_deck, load_resources
 from backend.rules.common.constants import (
     BUILDING_HOUSES,
     BUREAUCRACY,
@@ -24,6 +24,7 @@ from backend.rules.common.phase_state import (
 )
 from backend.rules.common.player_plants import find_player_plant
 from backend.rules.common.resource_transfer import transfer_plant_resource
+from backend.rules.common.regions import regions_in_play
 from backend.rules.common.turn_order import advance_turn
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
 from backend.rules.phase_four_building_houses.building_houses import buy_houses
@@ -48,10 +49,11 @@ class GameService:
         self._plant_slots_per_player = plant_slots_per_player
         self._rng = rng
         self._lock = RLock()
-
-        # A game loaded in phase one gets its turn order right away, which starts phase two.
-        if self._state.current_action == DETERMINING_PLAYER_ORDER:
-            determine_initial_order(self._state, self._rng)
+        self._regions_in_play = regions_in_play(self._state, load_number_of_areas())
+        self._city_regions = {
+            name: region.casefold()
+            for name, region, _, _ in load_map()["cities_positions"]
+        }
 
     # ---------------------------------------------------------------------------------------------
     # Reading and saving
@@ -64,7 +66,12 @@ class GameService:
     def save_game(self):
         """Write the current state to the save game."""
         with self._lock:
+            if not self._state.game_started:
+                return ErrorCode.E_NOT_OKAY
+
             self._save_state(self._state)
+
+            return ErrorCode.E_OK
 
     # ---------------------------------------------------------------------------------------------
     # Phase handling
@@ -156,6 +163,8 @@ class GameService:
         """Select a free house spot, or deselect it when it is already selected."""
         with self._lock:
             if self._state.current_action != BUILDING_HOUSES:
+                return ErrorCode.E_NOT_OKAY
+            if self._city_regions.get(city) not in self._regions_in_play:
                 return ErrorCode.E_NOT_OKAY
 
             spots = self._state.map_houses.get(city)

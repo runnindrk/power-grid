@@ -1,6 +1,8 @@
 function showStatus(status, message) {
   const element = document.getElementById('api-status');
 
+  if (element === null) return;
+
   element.dataset.state = status;
   element.textContent = message;
   element.title = message;
@@ -18,6 +20,26 @@ export async function fetchView() {
 
 export function postSaveGame() {
   return postApi('/api/save-game', {});
+}
+
+export function postNewGame(numberOfPlayers) {
+  return postApi('/api/new-game', { number_of_players: numberOfPlayers });
+}
+
+export function postLoadGame(saveId) {
+  return postApi('/api/load-game', { save_id: saveId });
+}
+
+export async function fetchSavedGames() {
+  try {
+    const response = await fetch('/api/game-saves', { cache: 'no-store' });
+
+    if (!response.ok) return [];
+
+    return (await response.json()).saves;
+  } catch (error) {
+    return [];
+  }
 }
 
 async function postApi(url, payload) {

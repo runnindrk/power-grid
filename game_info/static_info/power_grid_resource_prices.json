@@ -15,7 +15,8 @@
             "market": true,
             "price_scale": "shared",
             "slots_per_tier": 3,
-            "capacity": 24
+            "capacity": 24,
+            "initial_stock": 24
         },
         {
             "id": "oil",
@@ -28,7 +29,8 @@
             "market": true,
             "price_scale": "shared",
             "slots_per_tier": 3,
-            "capacity": 24
+            "capacity": 24,
+            "initial_stock": 18
         },
         {
             "id": "trash",
@@ -41,7 +43,8 @@
             "market": true,
             "price_scale": "shared",
             "slots_per_tier": 3,
-            "capacity": 24
+            "capacity": 24,
+            "initial_stock": 9
         },
         {
             "id": "gas",
@@ -64,7 +67,8 @@
             "market": true,
             "price_scale": "uranium",
             "slots_per_tier": 1,
-            "capacity": 12
+            "capacity": 12,
+            "initial_stock": 2
         }
     ]
 }

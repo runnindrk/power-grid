@@ -41,7 +41,8 @@ header h1 {
   color: var(--player-color);
   font-weight: 600;
 }
-.turn-order-player.finished::after {
+.turn-order-player.finished::after,
+.turn-order-player.passed::after {
   position: absolute;
   top: 50%;
   right: -2px;
@@ -90,7 +91,7 @@ header h1 {
 }
 #save-game:disabled {
   opacity: 0.55;
-  cursor: wait;
+  cursor: default;
 }
 #placement-status {
   color: var(--muted);
