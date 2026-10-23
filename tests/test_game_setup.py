@@ -35,11 +35,15 @@ class GameSetupTests(unittest.TestCase):
         self.assertEqual(client.get("/api/view").status_code, 400)
         self.assertEqual(client.post("/api/new-game", json={"number_of_players": 1}).status_code, 400)
         self.assertEqual(client.post("/api/new-game", json={"number_of_players": 7}).status_code, 400)
-        self.assertEqual(client.post("/api/new-game", json={"number_of_players": 2}).status_code, 200)
+        self.assertEqual(client.post("/api/new-game", json={
+            "number_of_players": 2,
+            "player_aliases": ["Ada", "Grace"],
+        }).status_code, 200)
 
         self.assertEqual(len(saves), 1)
         self.assertTrue(saves[0]["game_started"])
         self.assertEqual(saves[0]["number_of_players"], 2)
+        self.assertEqual(saves[0]["player_aliases"], {"p1": "Ada", "p2": "Grace"})
         self.assertEqual(saves[0]["current_action"], POWER_PLANT_AUCTION)
         self.assertEqual(len(saves[0]["player_turn_order"]), 2)
         self.assertEqual(len(saves[0]["regions_chosen"]), 3)
@@ -99,6 +103,12 @@ class GameSetupTests(unittest.TestCase):
             with self.subTest(player_count=player_count):
                 with self.assertRaises(ValueError):
                     create_new_game_state(player_count, rng=random.Random(9))
+
+    def test_new_game_factory_rejects_invalid_aliases(self):
+        for aliases in (["Ada"], [" ", "Grace"], ["Ada", "ada"], ["A" * 41, "Grace"]):
+            with self.subTest(aliases=aliases):
+                with self.assertRaises(ValueError):
+                    create_new_game_state(2, player_aliases=aliases, rng=random.Random(9))
 
 
 if __name__ == "__main__":

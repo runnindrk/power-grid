@@ -19,6 +19,10 @@
     <form id="new-game-form">
       <label for="player-count">Number of Players</label>
       <input id="player-count" name="number_of_players" type="number" min="2" max="6" step="1" value="4" required>
+      <fieldset id="player-aliases">
+        <legend>Player Aliases</legend>
+        <div id="player-alias-list"></div>
+      </fieldset>
       <button id="new-game" type="submit">New Game</button>
     </form>
     <section id="saved-games-panel" aria-label="Available saved games">

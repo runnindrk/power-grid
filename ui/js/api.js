@@ -22,8 +22,11 @@ export function postSaveGame() {
   return postApi('/api/save-game', {});
 }
 
-export function postNewGame(numberOfPlayers) {
-  return postApi('/api/new-game', { number_of_players: numberOfPlayers });
+export function postNewGame(numberOfPlayers, playerAliases) {
+  return postApi('/api/new-game', {
+    number_of_players: numberOfPlayers,
+    player_aliases: playerAliases,
+  });
 }
 
 export function postLoadGame(saveId) {

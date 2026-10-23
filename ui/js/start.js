@@ -3,6 +3,7 @@ import { fetchSavedGames, postLoadGame, postNewGame } from './api.js';
 const form = document.getElementById('new-game-form');
 const playerCount = document.getElementById('player-count');
 const newGameButton = document.getElementById('new-game');
+const playerAliasList = document.getElementById('player-alias-list');
 const savedGamesPanel = document.getElementById('saved-games-panel');
 const savedGamesList = document.getElementById('saved-games-list');
 const status = document.getElementById('setup-status');
@@ -11,6 +12,40 @@ let savedGames = [];
 function showMessage(result) {
   status.textContent = result.message;
   status.dataset.state = result.status;
+}
+
+function renderPlayerAliases() {
+  const previousValues = new Map(
+    [...playerAliasList.querySelectorAll('input')].map((input) => [input.dataset.playerIndex, input.value]),
+  );
+  const count = Number(playerCount.value);
+
+  playerAliasList.replaceChildren();
+
+  if (!Number.isInteger(count) || count < 2 || count > 6) return;
+
+  for (let index = 0; index < count; index += 1) {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    const playerNumber = index + 1;
+
+    label.className = 'player-alias-field';
+    label.appendChild(document.createTextNode(`Player ${playerNumber}`));
+    input.type = 'text';
+    input.name = 'player_aliases';
+    input.dataset.playerIndex = String(index);
+    input.value = previousValues.get(String(index)) || `Player ${playerNumber}`;
+    input.maxLength = 40;
+    input.required = true;
+    input.autocomplete = 'off';
+    input.setAttribute('aria-label', `Alias for player ${playerNumber}`);
+    label.appendChild(input);
+    playerAliasList.appendChild(label);
+  }
+}
+
+function enteredAliases() {
+  return [...playerAliasList.querySelectorAll('input')].map((input) => input.value.trim());
 }
 
 async function enterGame(action) {
@@ -89,7 +124,10 @@ form.addEventListener('submit', (event) => {
 
   if (!form.reportValidity()) return;
 
-  enterGame(() => postNewGame(Number(playerCount.value)));
+  enterGame(() => postNewGame(Number(playerCount.value), enteredAliases()));
 });
 
+playerCount.addEventListener('input', renderPlayerAliases);
+
 refreshSavedGames();
+renderPlayerAliases();

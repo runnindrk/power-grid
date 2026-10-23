@@ -18,6 +18,7 @@ from backend.server.messages import (
     HOUSE_SPOT_UPDATED,
     INVALID_POWER_PLANT,
     INVALID_PLAYER_COUNT,
+    INVALID_PLAYER_ALIASES,
     INVALID_RESOURCE_MOVE,
     NEW_GAME_ALREADY_STARTED,
     NEW_GAME_STARTED,
@@ -114,7 +115,14 @@ def new_game():
     if not has_int(payload, ["number_of_players"]) or not 2 <= payload["number_of_players"] <= 6:
         return build_reply(ErrorCode.E_NOT_OKAY, INVALID_PLAYER_COUNT)
 
-    state = create_new_game_state(payload["number_of_players"])
+    try:
+        state = create_new_game_state(
+            payload["number_of_players"],
+            player_aliases=payload.get("player_aliases"),
+        )
+    except ValueError:
+        return build_reply(ErrorCode.E_NOT_OKAY, INVALID_PLAYER_ALIASES)
+
     code = determine_initial_order(state)
 
     if code != ErrorCode.E_OK:

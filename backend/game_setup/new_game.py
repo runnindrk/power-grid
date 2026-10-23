@@ -6,7 +6,7 @@ from backend.rules.common.constants import DETERMINING_PLAYER_ORDER
 from backend.rules.common.game_state import GameState, default_player_colors
 
 
-def create_new_game_state(number_of_players, rng=None):
+def create_new_game_state(number_of_players, rng=None, player_aliases=None):
     """Build a fresh game entirely from static setup data, never from a saved game."""
     if not isinstance(number_of_players, int) or isinstance(number_of_players, bool):
         raise ValueError("The number of players must be an integer between 2 and 6.")
@@ -14,7 +14,30 @@ def create_new_game_state(number_of_players, rng=None):
         raise ValueError("The number of players must be between 2 and 6.")
 
     players = [f"p{index}" for index in range(1, number_of_players + 1)]
-    aliases = {player: f"Player {index}" for index, player in enumerate(players, start=1)}
+
+    if player_aliases is None:
+        alias_names = [f"Player {index}" for index in range(1, number_of_players + 1)]
+    else:
+        if not isinstance(player_aliases, list) or len(player_aliases) != number_of_players:
+            raise ValueError("Provide one alias for each player.")
+
+        alias_names = []
+
+        for alias in player_aliases:
+            if not isinstance(alias, str):
+                raise ValueError("Player aliases must be text.")
+
+            alias = alias.strip()
+
+            if not alias or len(alias) > 40:
+                raise ValueError("Player aliases must be 1 to 40 characters.")
+
+            alias_names.append(alias)
+
+        if len({alias.casefold() for alias in alias_names}) != number_of_players:
+            raise ValueError("Player aliases must be unique.")
+
+    aliases = dict(zip(players, alias_names))
     settings = load_settings()
     resources = load_resources()["resources"]
     map_data = load_map()

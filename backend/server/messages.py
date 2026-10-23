@@ -19,6 +19,7 @@ GAME_LOADED = "Game Loaded"
 NO_SAVED_GAME = "No saved game available"
 GAME_NOT_LOADED = "Start a new game or load a saved game first"
 INVALID_PLAYER_COUNT = "Choose between 2 and 6 players"
+INVALID_PLAYER_ALIASES = "Enter a unique name for each player (up to 40 characters)"
 BID_PLACED = "Bid Placed"
 PASSED = "Passed"
 
