@@ -11,7 +11,7 @@ from backend.game_setup.power_plant_deck import (
     prepare_initial_power_plant_deck,
 )
 from backend.rules.phase_two_auction.auction import award_power_plant
-from tests.helpers import new_auction_state, new_client
+from tests.unit.helpers import new_auction_state, new_client
 
 
 class PlantDeckTests(unittest.TestCase):

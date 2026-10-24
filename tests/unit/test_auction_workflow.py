@@ -9,7 +9,7 @@ from backend.rules.common.constants import (
     PHASE_FOUR_BUILDING_HOUSES,
 )
 from backend.rules.common.player_plants import new_power_plant
-from tests.helpers import find_by_label, new_auction_state, new_client
+from tests.unit.helpers import find_by_label, new_auction_state, new_client
 
 
 class AuctionWorkflowTests(unittest.TestCase):

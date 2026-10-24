@@ -15,7 +15,7 @@ from backend.rules.common.phase_flow import start_phase_five
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
 from backend.rules.phase_two_auction.auction import finish_auction
 from backend.server.app import create_app
-from tests.helpers import new_service
+from tests.unit.helpers import new_service
 from backend.views.game_view import build_view
 
 
