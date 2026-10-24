@@ -68,20 +68,29 @@ function createHouseSpot(spot, tooltip, refresh, gameStarted) {
   });
   const faceFill = spot.classes.includes('selected') ? 'url(#selected-house-pattern)' : spot.face_fill;
   const face = el('path', { class: 'house-spot-face', d: spot.face_path, fill: faceFill });
+  const outline = el('path', { class: 'house-spot-outline', d: spot.face_path });
 
   group.append(face);
 
   group.addEventListener('mouseenter', (event) => {
     showPriceTooltip(tooltip, spot, event);
     setNetworkHighlight(spot, true);
+    outline.classList.add('hovered');
   });
   group.addEventListener('mousemove', (event) => showPriceTooltip(tooltip, spot, event));
   group.addEventListener('mouseleave', () => {
     tooltip.style.display = 'none';
     setNetworkHighlight(spot, false);
+    outline.classList.remove('hovered');
   });
-  group.addEventListener('focus', () => setNetworkHighlight(spot, true));
-  group.addEventListener('blur', () => setNetworkHighlight(spot, false));
+  group.addEventListener('focus', () => {
+    setNetworkHighlight(spot, true);
+    outline.classList.add('hovered');
+  });
+  group.addEventListener('blur', () => {
+    setNetworkHighlight(spot, false);
+    outline.classList.remove('hovered');
+  });
 
   function toggleSpot() {
     if (disabled) return;
@@ -98,7 +107,7 @@ function createHouseSpot(spot, tooltip, refresh, gameStarted) {
     }
   });
 
-  return group;
+  return { group, outline };
 }
 
 function createCity(city, tooltip, refresh, gameStarted) {
@@ -108,18 +117,20 @@ function createCity(city, tooltip, refresh, gameStarted) {
     'aria-disabled': city.aria_disabled,
   });
 
-  const label = el('text', { class: 'city-label', x: city.x, y: city.label_y, fill: city.label_color });
-
-  label.textContent = city.name;
-  group.appendChild(label);
+  const spots = el('g', { class: 'house-spots' });
+  const outlines = el('g', { class: 'house-spot-outlines', 'pointer-events': 'none' });
 
   for (const spot of city.spots) {
     const houseSpot = createHouseSpot(spot, tooltip, refresh, gameStarted);
 
-    group.insertBefore(houseSpot, label);
-    houseSpot.addEventListener('mouseenter', () => group.insertBefore(houseSpot, label));
-    houseSpot.addEventListener('focus', () => group.insertBefore(houseSpot, label));
+    spots.appendChild(houseSpot.group);
+    outlines.appendChild(houseSpot.outline);
   }
+
+  const label = el('text', { class: 'city-label', x: city.x, y: city.label_y, fill: city.label_color });
+
+  label.textContent = city.name;
+  group.append(spots, outlines, label);
 
   group.addEventListener('mouseenter', () => {
     group.classList.add('active');

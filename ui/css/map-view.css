@@ -56,15 +56,19 @@
   outline: none;
 }
 .house-spot-face {
-  stroke: #171a20;
-  stroke-width: 1.5;
-  transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s, filter 0.15s;
+  stroke: none;
+  transition: fill 0.15s, filter 0.15s;
 }
 .house-spot.locked:not(.occupied) .house-spot-face {
   cursor: not-allowed;
 }
-.house-spot:hover:not(:focus) .house-spot-face,
-.house-spot:focus-visible .house-spot-face {
+.house-spot-outline {
+  fill: none;
+  stroke: #171a20;
+  stroke-width: 1.5;
+  transition: stroke 0.15s, stroke-width 0.15s, filter 0.15s;
+}
+.house-spot-outline.hovered {
   stroke: #fff;
   stroke-width: 2;
   filter: brightness(1.2);
