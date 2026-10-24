@@ -145,6 +145,8 @@ def build_view(state: GameState):
             active_regions,
             state.current_player,
             state.step,
+            state.pending_houses,
+            state.player_network_routes,
         ),
         "header": header_view(config, state),
         "players": player_rows,

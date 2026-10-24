@@ -42,15 +42,22 @@ def _connection_cost(sources, target, graph):
     if not sources:
         return 0
 
+    costs = _connection_costs(sources, graph)
+    return costs.get(target)
+
+
+def _connection_tree(sources, graph):
+    if not sources:
+        return {city: 0 for city in graph}, {}
+
     distances = [(0, city) for city in sources if city in graph]
     heapq.heapify(distances)
     best = {city: 0 for _, city in distances}
+    previous = {}
 
     while distances:
         distance, city = heapq.heappop(distances)
 
-        if city == target:
-            return distance
         if distance != best[city]:
             continue
 
@@ -59,9 +66,39 @@ def _connection_cost(sources, target, graph):
 
             if next_distance < best.get(neighbor, float("inf")):
                 best[neighbor] = next_distance
+                previous[neighbor] = city
                 heapq.heappush(distances, (next_distance, neighbor))
 
-    return None
+    return best, previous
+
+
+def _connection_costs(sources, graph):
+    costs, _ = _connection_tree(sources, graph)
+    return costs
+
+
+def connection_costs_from_network(map_data, active_regions, sources):
+    """Return each active city's cheapest connection cost from the supplied network."""
+    graph = _city_graph(map_data, active_regions)
+    return _connection_costs(sources, graph)
+
+
+def connection_routes_from_network(map_data, active_regions, sources):
+    """Return each active city's cheapest connection cost and route from the network."""
+    graph = _city_graph(map_data, active_regions)
+    costs, previous = _connection_tree(sources, graph)
+    routes = {}
+
+    for city, cost in costs.items():
+        path = [city]
+
+        while path[-1] in previous:
+            path.append(previous[path[-1]])
+
+        path.reverse()
+        routes[city] = {"cost": cost, "path": path}
+
+    return routes
 
 
 def _placement_price(state: GameState, player, placements, map_data, active_regions, spot_costs):
@@ -119,11 +156,25 @@ def buy_houses(state: GameState, player, placements, map_data, active_regions, s
     if price is None or price > state.player_money.get(player, -1):
         return ErrorCode.E_NOT_OKAY
 
+    sources = {
+        city
+        for city, spots in state.map_houses.items()
+        if player in spots.values()
+    }
+    routes = []
+
+    for placement in placements:
+        city = placement["city"]
+        route = connection_routes_from_network(map_data, active_regions, sources).get(city)
+        routes.append(route["path"] if route else [city])
+        sources.add(city)
+
     state.player_money[player] -= price
 
     for placement in placements:
         state.map_houses[placement["city"]][placement["spot"]] = player
 
+    state.player_network_routes.setdefault(player, []).extend(routes)
     state.pending_houses.clear()
 
     return ErrorCode.E_OK

@@ -3,6 +3,8 @@
 
 import math
 
+from backend.rules.phase_four_building_houses.building_houses import connection_routes_from_network
+
 # -------------------------------------------------------------------------------------------------
 # Colors
 
@@ -159,7 +161,8 @@ def connection_views(cities, connections, cost_colors, inactive_connections):
 # -------------------------------------------------------------------------------------------------
 # House spots
 
-def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active, available):
+def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active, available,
+              connection_cost, network_path_ids, network_color):
     """Describe one house spot of a city: its shape, its owner color and whether it is selected."""
     display = config["display"]
     price = config["rules"]["house_spot_costs"][spot]
@@ -176,6 +179,13 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
         face_fill = players[owner]["color"]
 
     is_selected = (city["name"], spot) in selected
+    total_price = price + connection_cost if connection_cost is not None else None
+    price_label = f"price ${price}"
+
+    if connection_cost is not None:
+        price_label += f" (${price} spot + ${connection_cost} connection)"
+    else:
+        price_label += " (connection unavailable)"
 
     if is_selected:
         classes.append("selected")
@@ -192,18 +202,23 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
         "classes": classes,
         "owner": owner,
         "price": price,
-        "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}, price ${price}",
+        "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}, {price_label}",
         "aria_disabled": not available,
         "aria_pressed": is_selected,
         "face_path": wedge_path(city["x"], city["y"], display["map"]["spot_radius"], start_angle, start_angle + arc),
         "face_fill": face_fill,
+        "connection_cost": connection_cost,
+        "total_price": total_price,
+        "network_path_ids": network_path_ids,
+        "network_color": network_color,
     }
 
 # -------------------------------------------------------------------------------------------------
 # City view
 
 def city_view(config, index, city, houses, connections, players, selected, active_regions,
-              inactive_connections, current_player, step):
+              inactive_connections, current_player, step, connection_cost, network_path_ids,
+              network_color):
     """Describe a city, its house spots, and the lines to highlight when hovered."""
     display = config["display"]
 
@@ -235,6 +250,9 @@ def city_view(config, index, city, houses, connections, players, selected, activ
             selected,
             active,
             available,
+            connection_cost,
+            network_path_ids,
+            network_color,
         ))
 
     highlight_ids = []
@@ -276,7 +294,8 @@ def city_view(config, index, city, houses, connections, players, selected, activ
 # -------------------------------------------------------------------------------------------------
 # Whole map
 
-def build_map_view(config, map_data, map_houses, players, selected, active_regions, current_player, step):
+def build_map_view(config, map_data, map_houses, players, selected, active_regions, current_player, step,
+                   pending_houses, player_network_routes):
     """Describe the whole map: size, cities with their house spots, lines and cost labels."""
     map_settings = config["display"]["map"]
     scale = map_settings["scale"]
@@ -289,11 +308,68 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
     lines, cost_labels = connection_views(
         cities, connections, config["display"]["cost_colors"], inactive_connections,
     )
+    line_indexes = {
+        frozenset((cities[first]["name"], cities[second]["name"])): index
+        for index, (first, second, _) in enumerate(connections)
+    }
 
     city_views = []
+    owned_cities = {
+        city for city, houses in map_houses.items()
+        if current_player in houses.values()
+    }
+    pending_cities = [house["city"] for house in pending_houses]
+    pending_indexes = {city: index for index, city in enumerate(pending_cities)}
+    route_cache = {}
+    display_routes = {
+        player: [list(path) for path in player_network_routes.get(player, [])]
+        for player in players
+    }
+
+    for player in players:
+        covered_cities = {
+            path[-1]
+            for path in display_routes[player]
+            if path
+        }
+        sources = set(covered_cities)
+
+        for city in cities:
+            city_name = city["name"]
+
+            if player not in map_houses[city_name].values() or city_name in covered_cities:
+                continue
+
+            routes = connection_routes_from_network(map_data, active_regions, sources)
+            route = routes.get(city_name)
+
+            if route:
+                display_routes[player].append(route["path"])
+
+            sources.add(city_name)
 
     for index in range(len(cities)):
         houses = map_houses[cities[index]["name"]]
+        city_name = cities[index]["name"]
+        pending_index = pending_indexes.get(city_name)
+        connected_cities = set(pending_cities if pending_index is None else pending_cities[:pending_index])
+        network = frozenset(owned_cities | connected_cities)
+
+        if network not in route_cache:
+            route_cache[network] = connection_routes_from_network(map_data, active_regions, network)
+
+        route = route_cache[network].get(city_name)
+        connection_cost = route["cost"] if route else None
+        network_path_ids = []
+
+        if pending_index is not None and route:
+            display_routes.setdefault(current_player, []).append(route["path"])
+
+        if route:
+            for first, second in zip(route["path"], route["path"][1:]):
+                line_index = line_indexes[frozenset((first, second))]
+                network_path_ids.append(f"connection-{line_index}")
+
         city_views.append(city_view(
             config,
             index,
@@ -306,7 +382,27 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
             inactive_connections,
             current_player,
             step,
+            connection_cost,
+            network_path_ids,
+            players.get(current_player, {}).get("color"),
         ))
+
+    edge_owners = [set() for _ in connections]
+
+    for player, paths in display_routes.items():
+        for path in paths:
+            for first, second in zip(path, path[1:]):
+                edge_index = line_indexes.get(frozenset((first, second)))
+
+                if edge_index is not None:
+                    edge_owners[edge_index].add(player)
+
+    for index, line in enumerate(lines):
+        line["network_colors"] = [
+            {"player": player, "color": players[player]["color"]}
+            for player in players
+            if player in edge_owners[index]
+        ]
 
     text = config["text"]
 
@@ -315,6 +411,7 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
         "height": height,
         "boundary": {"x": 1, "y": 1, "width": width - 2, "height": height - 2},
         "outline_url": map_settings["outline_url"],
+        "selection_color": players.get(current_player, {}).get("color"),
         "stats": text["stats_line"].format(title=text["map_title"], cities=len(cities), connections=len(connections)),
         "lines": lines,
         "cost_labels": cost_labels,

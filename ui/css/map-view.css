@@ -13,6 +13,19 @@
   stroke: var(--line-highlight);
   stroke-width: 3.5;
 }
+.connection-line.network-segment {
+  stroke: var(--segment-color);
+  stroke-width: var(--segment-width);
+  stroke-linecap: butt;
+}
+.connection-line.network-highlight {
+  stroke: var(--network-color);
+  stroke-width: 4;
+}
+.connection-line.network-segment.network-highlight {
+  stroke: var(--segment-color);
+  stroke-width: calc(var(--segment-width) + 1px);
+}
 .connection-line.inactive,
 .cost-bg.inactive,
 .cost-label.inactive {
@@ -47,13 +60,7 @@
   stroke-width: 1.5;
   transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s, filter 0.15s;
 }
-.house-spot.selected .house-spot-face {
-  stroke: #ffd54f;
-  stroke-width: 3;
-  filter: brightness(1.25);
-}
 .house-spot.locked:not(.occupied) .house-spot-face {
-  opacity: 0.28;
   cursor: not-allowed;
 }
 .house-spot:hover:not(:focus) .house-spot-face,

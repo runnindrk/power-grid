@@ -26,6 +26,7 @@ class GameState:
     player_power_plants: dict[str, list[dict]]
     map_houses: dict[str, dict[str, str | None]]
     pending_houses: list[dict[str, str]]
+    player_network_routes: dict[str, list[list[str]]] = field(default_factory=dict)
     pending_resource_purchase: dict[str, int] = field(default_factory=dict)
     pending_resource_player: str | None = None
     pending_resource_price: int = 0

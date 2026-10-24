@@ -7,7 +7,11 @@ from backend.data.game_state_store import load_game_state
 from backend.game_setup.new_game import create_new_game_state
 from backend.rules.common.constants import BUILDING_HOUSES
 from backend.rules.common.error_codes import ErrorCode
-from backend.rules.phase_four_building_houses.building_houses import buy_houses, quote_houses
+from backend.rules.phase_four_building_houses.building_houses import (
+    buy_houses,
+    connection_routes_from_network,
+    quote_houses,
+)
 from backend.server.app import create_app
 from backend.views.game_view import build_view
 
@@ -61,6 +65,78 @@ class BuildingHouseRuleTests(unittest.TestCase):
         state.current_player = player
         self.assertEqual(service.toggle_house_spot("Kiel", "spot_3"), ErrorCode.E_NOT_OKAY)
 
+    def test_map_spot_hover_price_includes_house_and_connection_costs(self):
+        state = create_new_game_state(4, rng=random.Random(31))
+        state.regions_chosen = ["green", "orange", "red", "yellow"]
+        state.step = 3
+        player = state.current_player
+        state.map_houses["Flensburg"]["spot_1"] = player
+
+        cities = build_view(state)["map"]["cities"]
+        kiel_spot = next(
+            spot for city in cities if city["name"] == "Kiel"
+            for spot in city["spots"] if spot["spot"] == "spot_2"
+        )
+
+        self.assertEqual(kiel_spot["price"], 15)
+        self.assertEqual(kiel_spot["connection_cost"], 4)
+        self.assertEqual(kiel_spot["total_price"], 19)
+
+    def test_map_view_exposes_player_colored_routes_several_edges_away(self):
+        state = create_new_game_state(4, rng=random.Random(31))
+        state.regions_chosen = ["green", "orange", "red", "yellow"]
+        state.step = 3
+        player = state.current_player
+        state.map_houses["Flensburg"]["spot_1"] = player
+        view = build_view(state)
+        spots = [spot for city in view["map"]["cities"] for spot in city["spots"]]
+        far_spot = next(spot for spot in spots if len(spot["network_path_ids"]) >= 2)
+        player_color = next(row["color"] for row in view["players"] if row["player"] == player)
+        line_ids = {line["id"] for line in view["map"]["lines"]}
+
+        self.assertEqual(far_spot["network_color"], player_color)
+        self.assertTrue(set(far_spot["network_path_ids"]).issubset(line_ids))
+
+    def test_pending_house_selection_uses_current_player_color(self):
+        state = create_new_game_state(4, rng=random.Random(31))
+        state.regions_chosen = ["green", "orange", "red", "yellow"]
+        player = state.current_player
+        state.pending_houses = [
+            {"city": "Flensburg", "spot": "spot_1"},
+            {"city": "Kiel", "spot": "spot_2"},
+        ]
+        view = build_view(state)
+        spot = next(
+            spot for city in view["map"]["cities"] if city["name"] == "Kiel"
+            for spot in city["spots"] if spot["spot"] == "spot_2"
+        )
+        player_color = next(row["color"] for row in view["players"] if row["player"] == player)
+
+        self.assertIn("selected", spot["classes"])
+        self.assertEqual(view["map"]["selection_color"], player_color)
+        self.assertTrue(any(
+            route["color"] == player_color
+            for line in view["map"]["lines"]
+            for route in line["network_colors"]
+        ))
+
+    def test_shared_connection_exposes_each_player_color(self):
+        state = create_new_game_state(4, rng=random.Random(31))
+        state.regions_chosen = ["green", "orange", "red", "yellow"]
+        players = state.player_turn_order[:3]
+
+        for index, player in enumerate(players, start=1):
+            spot = f"spot_{index}"
+            state.map_houses["Flensburg"][spot] = player
+            state.map_houses["Kiel"][spot] = player
+            state.player_network_routes[player] = [["Flensburg", "Kiel"]]
+
+        lines = build_view(state)["map"]["lines"]
+        shared_line = next(line for line in lines if len(line["network_colors"]) == 3)
+        expected_colors = [state.player_colors[player] for player in players]
+
+        self.assertEqual([entry["color"] for entry in shared_line["network_colors"]], expected_colors)
+
     def test_step_unlocks_are_visible_in_the_map_view(self):
         state = create_new_game_state(4, rng=random.Random(31))
         state.regions_chosen = ["green", "orange", "red", "yellow"]
@@ -104,6 +180,25 @@ class BuildingHouseRuleTests(unittest.TestCase):
         self.assertEqual(
             quote_houses(self.state, self.player, placements, self.map_data, self.active_regions, self.spot_costs),
             17,
+        )
+
+    def test_network_route_tracks_multiple_edges_to_city(self):
+        routes = connection_routes_from_network(self.map_data, self.active_regions, {"A"})
+
+        self.assertEqual(routes["D"], {"cost": 12, "path": ["A", "B", "C", "D"]})
+
+    def test_buy_persists_the_connection_route(self):
+        self.state.map_houses["A"]["spot_1"] = self.player
+        placements = [{"city": "D", "spot": "spot_1"}]
+
+        self.assertEqual(
+            buy_houses(self.state, self.player, placements, self.map_data, self.active_regions, self.spot_costs),
+            ErrorCode.E_OK,
+        )
+        self.assertEqual(self.state.player_network_routes[self.player], [["A", "B", "C", "D"]])
+        self.assertEqual(
+            self.state.to_dict()["player_network_routes"][self.player],
+            [["A", "B", "C", "D"]],
         )
 
     def test_spots_unlock_by_step_and_player_can_only_have_one_house_per_city(self):
