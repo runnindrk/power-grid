@@ -7,6 +7,7 @@ from backend.rules.common.constants import (
     POWER_PLANT_BIDDING,
     PHASE_TWO_AUCTION,
 )
+from backend.data.files import load_plant_deck
 from backend.rules.common.error_codes import ErrorCode
 from backend.rules.common.game_state import GameState
 from backend.rules.common.phase_flow import start_phase_three
@@ -115,8 +116,14 @@ def award_power_plant(state: GameState, winner, plant_slots_per_player):
     state.power_plant_market.remove(plant_id)
 
     if state.power_plant_deck:
-        state.power_plant_market.append(state.power_plant_deck.pop(0))
-        state.power_plant_market.sort()
+        drawn_card = state.power_plant_deck.pop(0)
+        card_definition = load_plant_deck()[drawn_card]
+
+        if "cost" in card_definition:
+            state.power_plant_market.append(drawn_card)
+            state.power_plant_market.sort()
+        else:
+            state.step = int(drawn_card.split()[-1])
 
     state.players_bought_power_plant.append(winner)
     clear_current_auction(state)

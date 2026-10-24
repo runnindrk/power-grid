@@ -13,8 +13,13 @@ def create_initial_power_plant_setup(plant_definitions, number_of_players, marke
     rng = rng or random
     plug_plants = []
     other_plants = []
+    special_cards = []
 
     for plant_id, definition in plant_definitions.items():
+        if "cost" not in definition:
+            special_cards.append(plant_id)
+            continue
+
         if definition["back_of_the_card"] == "plug":
             plug_plants.append(plant_id)
         else:
@@ -43,6 +48,7 @@ def create_initial_power_plant_setup(plant_definitions, number_of_players, marke
     draw_pile = plug_plants[market_size:] + other_plants
     rng.shuffle(draw_pile)
     draw_pile.insert(0, next_plant)
+    draw_pile.extend(special_cards)
 
     return market, draw_pile, removed_plants
 

@@ -43,11 +43,12 @@ def load_resources():
 
 
 def load_plant_deck():
-    """Return the power plants indexed by cost, which is also the plant id."""
+    """Return cards indexed by ID; ordinary plant IDs remain their costs."""
     plants = {}
 
     for plant in read_json(PLANT_DECK_PATH)["deck"]:
-        plants[plant["cost"]] = plant
+        plant_id = plant["id"] if "id" in plant else plant["cost"]
+        plants[plant_id] = plant
 
     return plants
 

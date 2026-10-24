@@ -4,7 +4,13 @@
 from copy import deepcopy
 from threading import RLock
 
-from backend.data.files import load_map, load_number_of_areas, load_plant_deck, load_resources
+from backend.data.files import (
+    load_map,
+    load_number_of_areas,
+    load_plant_deck,
+    load_replenishment,
+    load_resources,
+)
 from backend.rules.common.constants import (
     BUILDING_HOUSES,
     BUREAUCRACY,
@@ -27,6 +33,7 @@ from backend.rules.common.resource_transfer import transfer_plant_resource
 from backend.rules.common.regions import regions_in_play
 from backend.rules.common.turn_order import advance_turn, advance_turn_reverse
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
+from backend.rules.phase_five_bureaucracy.bureaucracy import finish_bureaucracy
 from backend.rules.phase_four_building_houses.building_houses import buy_houses
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
 from backend.rules.phase_three_resource_buying.resource_buying import buy_resources, quote_resources
@@ -130,6 +137,8 @@ class GameService:
 
     def _start_next_cycle(self):
         """Go back to phase one, which immediately sets the order and starts the auction."""
+        resource_data = load_resources()
+        finish_bureaucracy(self._state, load_replenishment(), resource_data["resources"])
         self._state.cycles += 1
         self._state.phase = 1
         self._state.current_action = DETERMINING_PLAYER_ORDER

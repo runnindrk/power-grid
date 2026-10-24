@@ -503,6 +503,10 @@
             "hybrid": false,
             "special": false,
             "back_of_the_card": "no_plug"
+        },
+        {
+            "id": "Step 3",
+            "back_of_the_card": "no_plug"
         }
     ]
 }

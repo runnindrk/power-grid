@@ -9,6 +9,7 @@ from backend.rules.common.constants import (
     PHASE_TWO_AUCTION,
     POWER_PLANT_AUCTION,
 )
+from backend.rules.common.player_houses import count_houses
 from backend.rules.common.phase_state import clear_phase_finished
 
 # -------------------------------------------------------------------------------------------------
@@ -45,6 +46,12 @@ def start_phase_four(state):
 
 def start_phase_five(state):
     """Start bureaucracy."""
+    if state.step == 1 and any(
+        count_houses(state, player) >= 7
+        for player in state.player_turn_order
+    ):
+        state.step = 2
+
     state.phase = 5
     state.current_action = BUREAUCRACY
     state.current_player = state.player_turn_order[0]

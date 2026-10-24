@@ -11,6 +11,7 @@ from backend.rules.common.constants import (
     POWER_PLANT_AUCTION,
 )
 from backend.rules.common.error_codes import ErrorCode
+from backend.rules.common.phase_flow import start_phase_five
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
 from backend.rules.phase_two_auction.auction import finish_auction
 from backend.server.app import create_app
@@ -19,6 +20,61 @@ from backend.views.game_view import build_view
 
 
 class GameCycleTests(unittest.TestCase):
+    def test_bureaucracy_replenishes_resources_and_buries_highest_plant_in_steps_one_and_two(self):
+        cases = (
+            (1, {"coal": 24, "oil": 12, "trash": 24, "uranium": 1}, True),
+            (2, {"coal": 24, "oil": 13, "trash": 24, "uranium": 1}, True),
+            (3, {"coal": 23, "oil": 14, "trash": 24, "uranium": 1}, False),
+        )
+
+        for step, expected_resources, should_bury_plant in cases:
+            with self.subTest(step=step):
+                state = create_new_game_state(2, rng=random.Random(step))
+                state.step = step
+                state.phase = 5
+                state.current_action = BUREAUCRACY
+                state.power_plant_market = [3, 7, 12]
+                state.power_plant_deck = [25, "Step 3", 30]
+                state.resource_market = {"coal": 20, "oil": 10, "trash": 23, "uranium": 0}
+                service = new_service(state)
+
+                for player in state.player_turn_order:
+                    self.assertEqual(service.bureaucracy(player), ErrorCode.E_OK)
+
+                self.assertEqual(state.resource_market, expected_resources)
+
+                if should_bury_plant:
+                    self.assertEqual(state.power_plant_market, [3, 7])
+                    self.assertEqual(state.power_plant_deck, [25, "Step 3", 30, 12])
+                else:
+                    self.assertEqual(state.power_plant_market, [3, 7, 12])
+                    self.assertEqual(state.power_plant_deck, [25, "Step 3", 30])
+
+    def test_step_two_is_applied_at_bureaucracy_after_seventh_house(self):
+        for house_count, expected_step in ((6, 1), (7, 2)):
+            with self.subTest(house_count=house_count):
+                state = load_game_state()
+                player = state.player_turn_order[0]
+
+                for spots in state.map_houses.values():
+                    for spot in spots:
+                        spots[spot] = None
+
+                available_spots = [
+                    (city, spot)
+                    for city, spots in state.map_houses.items()
+                    for spot in spots
+                ]
+
+                for city, spot in available_spots[:house_count]:
+                    state.map_houses[city][spot] = player
+
+                state.step = 1
+                start_phase_five(state)
+
+                self.assertEqual(state.phase, 5)
+                self.assertEqual(state.step, expected_step)
+
     # New-game setup explicitly determines order; loading a saved state does not do this.
     def test_new_game_determines_order_and_enters_phase_two(self):
         rng = random.Random(7)
@@ -143,6 +199,32 @@ class GameCycleTests(unittest.TestCase):
         self.assertEqual(state.current_action, POWER_PLANT_AUCTION)
         self.assertEqual(state.current_player, state.player_turn_order[0])
         self.assertFalse(state.phase_finished_players)
+
+    def test_step_two_starts_when_bureaucracy_begins_after_seventh_house(self):
+        rng = random.Random(13)
+        state = create_new_game_state(2, rng=rng)
+        determine_initial_order(state, rng)
+        state.phase = 4
+        state.current_action = BUILDING_HOUSES
+        state.step = 1
+        player = state.player_turn_order[0]
+        city_spots = [
+            (city, spot)
+            for city, spots in state.map_houses.items()
+            for spot in spots
+        ][:7]
+
+        for city, spot in city_spots:
+            state.map_houses[city][spot] = player
+
+        state.current_player = state.player_turn_order[-1]
+        service = new_service(state)
+
+        for player_in_turn in reversed(state.player_turn_order):
+            self.assertEqual(service.buy_houses(player_in_turn), ErrorCode.E_OK)
+
+        self.assertEqual(state.current_action, BUREAUCRACY)
+        self.assertEqual(state.step, 2)
 
     # The header view shows the cycle counter.
     def test_cycle_count_is_in_header_view(self):

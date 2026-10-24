@@ -16,7 +16,7 @@ class GameState:
     step: int
     phase: int
     power_plant_market: list[int]
-    power_plant_deck: list[int]
+    power_plant_deck: list[int | str]
     resource_market: dict[str, int]
     player_turn_order: list[str]
     current_player: str

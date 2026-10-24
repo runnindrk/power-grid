@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from backend.data.files import GAME_SAVE_DIR, load_settings, read_json
+from backend.data.files import GAME_SAVE_DIR, load_plant_deck, load_settings, read_json
 from backend.rules.common.game_state import GameState, default_player_colors
 
 # -------------------------------------------------------------------------------------------------
@@ -78,6 +78,13 @@ def _save_path(save_id=None):
 def load_game_state(save_id=None):
     """Load a selected timestamped game save into the Python state structure."""
     state = GameState(**read_json(_save_path(save_id)))
+
+    for card_id, card in load_plant_deck().items():
+        if "cost" not in card and isinstance(card_id, str) and card_id.startswith("Step "):
+            card_step = int(card_id.split()[-1])
+
+            if state.step < card_step and card_id not in state.power_plant_deck:
+                state.power_plant_deck.append(card_id)
 
     # Older saves have no colors yet; they are given once, in roster order.
     if not state.player_colors:

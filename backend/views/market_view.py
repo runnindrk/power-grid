@@ -42,9 +42,12 @@ def next_card_back_view(config, state: GameState, deck):
     label = ""
 
     if state.power_plant_deck:
-        back = deck[state.power_plant_deck[0]]["back_of_the_card"]
+        next_card = state.power_plant_deck[0]
+        definition = deck[next_card]
+        back = definition["back_of_the_card"]
+
         classes.append(back)
-        label = text["back_of_the_card"][back]
+        label = definition.get("name", next_card if isinstance(next_card, str) else text["back_of_the_card"][back])
 
     return {
         "heading": text["next_card_heading"],
