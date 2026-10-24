@@ -7,22 +7,14 @@ function setHighlight(ids, on) {
   }
 }
 
-function showTooltip(tooltip, city, event) {
-  const title = document.createElement('strong');
-
-  title.textContent = city.tooltip.title;
-  tooltip.replaceChildren(title);
-
-  for (const line of city.tooltip.lines) {
-    tooltip.append(document.createElement('br'), line);
-  }
-
+function showPriceTooltip(tooltip, spot, event) {
+  tooltip.textContent = '$' + spot.price;
   tooltip.style.display = 'block';
   tooltip.style.left = (event.pageX + 14) + 'px';
   tooltip.style.top = (event.pageY + 14) + 'px';
 }
 
-function createHouseSpot(spot, refresh, gameStarted) {
+function createHouseSpot(spot, tooltip, refresh, gameStarted) {
   const disabled = spot.aria_disabled || !gameStarted;
   const group = el('g', {
     class: spot.classes.join(' '),
@@ -34,10 +26,14 @@ function createHouseSpot(spot, refresh, gameStarted) {
   });
   const face = el('path', { class: 'house-spot-face', d: spot.face_path, fill: spot.face_fill });
   const mark = el('path', { class: 'house-mark', d: spot.mark_path, display: spot.mark_display });
-  const title = el('title', {});
 
-  title.textContent = spot.aria_label;
-  group.append(face, mark, title);
+  group.append(face, mark);
+
+  group.addEventListener('mouseenter', (event) => showPriceTooltip(tooltip, spot, event));
+  group.addEventListener('mousemove', (event) => showPriceTooltip(tooltip, spot, event));
+  group.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+  });
 
   function toggleSpot() {
     if (disabled) return;
@@ -65,7 +61,7 @@ function createCity(city, tooltip, refresh, gameStarted) {
   });
 
   for (const spot of city.spots) {
-    group.appendChild(createHouseSpot(spot, refresh, gameStarted));
+    group.appendChild(createHouseSpot(spot, tooltip, refresh, gameStarted));
   }
 
   const label = el('text', { class: 'city-label', x: city.x, y: city.label_y, fill: city.label_color });
@@ -81,11 +77,7 @@ function createCity(city, tooltip, refresh, gameStarted) {
   group.addEventListener('mouseleave', () => {
     group.classList.remove('active');
     setHighlight(city.highlight_ids, false);
-
-    tooltip.style.display = 'none';
   });
-
-  group.addEventListener('mousemove', (event) => showTooltip(tooltip, city, event));
 
   return group;
 }

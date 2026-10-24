@@ -130,6 +130,16 @@ class MapAreasTests(unittest.TestCase):
                     self.assertTrue(city["aria_disabled"])
                     self.assertTrue(all(spot["aria_disabled"] for spot in city["spots"]))
 
+    def test_map_view_exposes_house_spot_prices(self):
+        state = load_game_state()
+        cities = build_view(state)["map"]["cities"]
+
+        for city in cities:
+            with self.subTest(city=city["name"]):
+                prices = {spot["spot"]: spot["price"] for spot in city["spots"]}
+                self.assertEqual(prices, {"spot_1": 10, "spot_2": 15, "spot_3": 20})
+                self.assertTrue(all("price $" in spot["aria_label"] for spot in city["spots"]))
+
     def test_active_city_hover_excludes_connections_to_inactive_regions(self):
         state = load_game_state()
         map_data = load_map()

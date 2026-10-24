@@ -2,7 +2,12 @@
     "rules": {
         "max_players_on_board": 6,
         "plant_slots_per_player": 3,
-        "min_bid": 1
+        "min_bid": 1,
+        "house_spot_costs": {
+            "spot_1": 10,
+            "spot_2": 15,
+            "spot_3": 20
+        }
     },
     "text": {
         "map_title": "Germany",
@@ -10,6 +15,7 @@
         "region_line": "Region: {region}",
         "connections_line": "Connections: {count}",
         "houses_line": "Houses: {owned}/{total}",
+        "spot_prices_line": "House spots: {prices}",
         "house_prompt": "Select Houses",
         "buy_houses": "Buy Houses",
         "waiting_for_turn": "Waiting for turn",

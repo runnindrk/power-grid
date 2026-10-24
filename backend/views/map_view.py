@@ -169,6 +169,7 @@ def connection_views(cities, connections, cost_colors, inactive_connections):
 def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active):
     """Describe one house spot of a city: its shape, its owner color and whether it is selected."""
     display = config["display"]
+    price = config["rules"]["house_spot_costs"][spot]
     arc = 360 / spot_count
     start_angle = -90 + spot_index * arc
     mark_x, mark_y = point_at_angle(city["x"], city["y"], display["map"]["mark_radius"], start_angle + arc / 2)
@@ -197,7 +198,8 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
         "city": city["name"],
         "classes": classes,
         "owner": owner,
-        "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}",
+        "price": price,
+        "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}, price ${price}",
         "aria_disabled": bool(owner) or not active,
         "aria_pressed": is_selected,
         "face_path": wedge_path(city["x"], city["y"], display["map"]["spot_radius"], start_angle, start_angle + arc),
@@ -211,14 +213,12 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
 
 def city_view(config, index, city, houses, connections, players, selected, active_regions,
               inactive_connections):
-    """Describe a city: its house spots, its label, its tooltip and the lines to highlight when hovered."""
+    """Describe a city, its house spots, and the lines to highlight when hovered."""
     display = config["display"]
-    text = config["text"]
 
     spot_names = list(houses.keys())
     active = city["region"].casefold() in active_regions
     spots = []
-    owned = 0
 
     for spot_index in range(len(spot_names)):
         spot = spot_names[spot_index]
@@ -226,17 +226,12 @@ def city_view(config, index, city, houses, connections, players, selected, activ
             config, city, spot_index, len(spot_names), spot, houses[spot], players, selected, active,
         ))
 
-        if houses[spot]:
-            owned += 1
-
     highlight_ids = []
-    connection_count = 0
 
     for number in range(len(connections)):
         first, second, cost = connections[number]
 
         if (first == index or second == index) and number not in inactive_connections:
-            connection_count += 1
             highlight_ids.append(f"connection-{number}")
 
             if cost != 0:
@@ -265,14 +260,6 @@ def city_view(config, index, city, houses, connections, players, selected, activ
         "label_color": label_color,
         "spots": spots,
         "highlight_ids": highlight_ids,
-        "tooltip": {
-            "title": city["name"],
-            "lines": [
-                text["region_line"].format(region=city["region"]),
-                text["connections_line"].format(count=connection_count),
-                text["houses_line"].format(owned=owned, total=len(spot_names)),
-            ],
-        },
     }
 
 # -------------------------------------------------------------------------------------------------
