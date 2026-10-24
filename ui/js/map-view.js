@@ -25,9 +25,8 @@ function createHouseSpot(spot, tooltip, refresh, gameStarted) {
     'aria-pressed': spot.aria_pressed,
   });
   const face = el('path', { class: 'house-spot-face', d: spot.face_path, fill: spot.face_fill });
-  const mark = el('path', { class: 'house-mark', d: spot.mark_path, display: spot.mark_display });
 
-  group.append(face, mark);
+  group.append(face);
 
   group.addEventListener('mouseenter', (event) => showPriceTooltip(tooltip, spot, event));
   group.addEventListener('mousemove', (event) => showPriceTooltip(tooltip, spot, event));

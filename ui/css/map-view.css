@@ -62,13 +62,6 @@
   stroke-width: 2;
   filter: brightness(1.2);
 }
-.house-mark {
-  fill: #fff;
-  stroke: #171a20;
-  stroke-width: 0.65;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
 .map-outline {
   opacity: 0.35;
   pointer-events: none;

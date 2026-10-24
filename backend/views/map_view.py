@@ -55,13 +55,6 @@ def wedge_path(cx, cy, radius, start_angle, end_angle):
     return f"M {cx} {cy} L {start_x} {start_y} A {radius} {radius} 0 0 1 {end_x} {end_y} Z"
 
 
-def house_path(cx, cy):
-    """Return an SVG path for a small house icon centered on a point."""
-    return (
-        f"M {cx - 4} {cy} L {cx} {cy - 3.5} L {cx + 4} {cy} V {cy + 4} "
-        f"H {cx + 1.5} V {cy + 1} H {cx - 1.5} V {cy + 4} H {cx - 4} Z"
-    )
-
 # -------------------------------------------------------------------------------------------------
 # Cities and connections
 
@@ -172,18 +165,15 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
     price = config["rules"]["house_spot_costs"][spot]
     arc = 360 / spot_count
     start_angle = -90 + spot_index * arc
-    mark_x, mark_y = point_at_angle(city["x"], city["y"], display["map"]["mark_radius"], start_angle + arc / 2)
 
     classes = ["house-spot"]
     owner_name = "empty"
     face_fill = display["empty_spot_color"]
-    mark_display = "none"
 
     if owner:
         classes.append("occupied")
         owner_name = players[owner]["label"]
         face_fill = players[owner]["color"]
-        mark_display = "inline"
 
     is_selected = (city["name"], spot) in selected
 
@@ -207,8 +197,6 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
         "aria_pressed": is_selected,
         "face_path": wedge_path(city["x"], city["y"], display["map"]["spot_radius"], start_angle, start_angle + arc),
         "face_fill": face_fill,
-        "mark_path": house_path(mark_x, mark_y),
-        "mark_display": mark_display,
     }
 
 # -------------------------------------------------------------------------------------------------
