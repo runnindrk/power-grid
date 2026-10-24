@@ -6,6 +6,7 @@ from threading import RLock
 
 from backend.data.files import (
     load_map,
+    load_money,
     load_number_of_areas,
     load_plant_deck,
     load_replenishment,
@@ -29,7 +30,7 @@ from backend.rules.common.phase_state import (
     mark_phase_finished,
     phase_key,
 )
-from backend.rules.common.player_plants import find_player_plant
+from backend.rules.common.player_plants import can_power_plant, find_player_plant
 from backend.rules.common.resource_transfer import transfer_plant_resource
 from backend.rules.common.regions import regions_in_play
 from backend.rules.common.turn_order import advance_turn, advance_turn_reverse
@@ -250,6 +251,8 @@ class GameService:
 
             if plant is None:
                 return ErrorCode.E_NOT_OKAY
+            if not plant["ready_to_power"] and not can_power_plant(plant, load_plant_deck().get(plant_id)):
+                return ErrorCode.E_NOT_OKAY
 
             plant["ready_to_power"] = not plant["ready_to_power"]
 
@@ -257,7 +260,7 @@ class GameService:
 
     def bureaucracy(self, player):
         def rule(state):
-            return bureaucracy(state, player)
+            return bureaucracy(state, player, load_plant_deck(), load_money()["money"][0])
 
         return self._play_turn(player, BUREAUCRACY, rule)
 

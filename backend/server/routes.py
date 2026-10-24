@@ -25,7 +25,7 @@ from backend.server.messages import (
     NEW_GAME_STARTED,
     NO_SAVED_GAME,
     PASSED,
-    PLACEHOLDER_BUREAUCRACY,
+    BUREAUCRACY_COMPLETED,
     PLACEHOLDER_HOUSE_PURCHASE,
     POWER_PLANT_DISCARDED,
     POWER_PLANT_READY_UPDATED,
@@ -311,7 +311,7 @@ def bureaucracy():
     """Finish the bureaucracy turn of the current player."""
     code = game_service().bureaucracy(get_payload().get("player"))
 
-    return build_reply(code, PLACEHOLDER_BUREAUCRACY)
+    return build_reply(code, BUREAUCRACY_COMPLETED)
 
 # -------------------------------------------------------------------------------------------------
 # Any phase

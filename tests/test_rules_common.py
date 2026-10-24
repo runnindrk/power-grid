@@ -112,6 +112,38 @@ class ResourceTransferTests(unittest.TestCase):
         self.assertEqual(self.source["resources"]["coal"], 0)
         self.assertEqual(self.target["resources"]["coal"], 1)
 
+    def test_occupied_compatible_slot_swaps_resources(self):
+        source = new_power_plant(5)
+        target = new_power_plant(12)
+        source["resources"]["coal"] = 1
+        target["resources"]["oil"] = 1
+        self.state.player_power_plants[self.player] = [source, target]
+
+        code = transfer_plant_resource(
+            self.state, self.player, 5, 0, 12, 0, self.plants, self.resources,
+        )
+
+        self.assertEqual(code, ErrorCode.E_OK)
+        self.assertEqual(source["resources"]["coal"], 0)
+        self.assertEqual(source["resources"]["oil"], 1)
+        self.assertEqual(target["resources"]["oil"], 0)
+        self.assertEqual(target["resources"]["coal"], 1)
+
+    def test_incompatible_occupied_slot_swap_is_atomic(self):
+        source = new_power_plant(4)
+        target = new_power_plant(7)
+        source["resources"]["coal"] = 1
+        target["resources"]["oil"] = 1
+        self.state.player_power_plants[self.player] = [source, target]
+
+        code = transfer_plant_resource(
+            self.state, self.player, 4, 0, 7, 0, self.plants, self.resources,
+        )
+
+        self.assertEqual(code, ErrorCode.E_NOT_OKAY)
+        self.assertEqual(source["resources"]["coal"], 1)
+        self.assertEqual(target["resources"]["oil"], 1)
+
     # A fuel unit can only be dragged from a filled space and dropped on the first free space.
     def test_invalid_moves_change_nothing(self):
         self.assertEqual(self.move(1, 0), ErrorCode.E_NOT_OKAY)

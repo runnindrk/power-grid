@@ -2,6 +2,7 @@
 # Imports
 
 from backend.rules.common.resource_transfer import storage_capacity, stored_resources
+from backend.rules.common.player_plants import can_power_plant
 
 # -------------------------------------------------------------------------------------------------
 # Fuel
@@ -145,6 +146,7 @@ def owned_plant_card(config, definition, player, plant):
         "player_id": player,
         "plant_id": plant["plant_id"],
         "pressed": plant["ready_to_power"],
+        "disabled": not plant["ready_to_power"] and not can_power_plant(plant, definition),
     }
 
     return card

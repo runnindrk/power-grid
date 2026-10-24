@@ -2,7 +2,7 @@
 # Imports
 
 from backend.rules.common.error_codes import ErrorCode
-from backend.rules.common.player_plants import find_player_plant
+from backend.rules.common.player_plants import can_power_plant, find_player_plant
 
 # -------------------------------------------------------------------------------------------------
 # Storage
@@ -62,16 +62,31 @@ def transfer_plant_resource(state, player, source_plant_id, source_slot, target_
     source_capacity = storage_capacity(source_definition, resources)
     target_capacity = storage_capacity(target_definition, resources)
 
-    # The dragged slot must hold fuel; the drop slot must be the empty space after the stored fuel.
+    # The dragged slot must hold fuel, and the target slot must be within the plant's storage.
     if source_slot >= len(source_stored) or len(source_stored) > source_capacity:
         return ErrorCode.E_NOT_OKAY
-    if len(target_stored) > target_capacity:
-        return ErrorCode.E_NOT_OKAY
-    if target_slot >= target_capacity or target_slot < len(target_stored):
+    if len(target_stored) > target_capacity or target_slot >= target_capacity:
         return ErrorCode.E_NOT_OKAY
 
-    resource = source_stored[source_slot]
-    source["resources"][resource] -= 1
-    target["resources"][resource] = target["resources"].get(resource, 0) + 1
+    source_resource = source_stored[source_slot]
+    target_resource = target_stored[target_slot] if target_slot < len(target_stored) else None
+
+    if target_definition.get(source_resource, 0) <= 0:
+        return ErrorCode.E_NOT_OKAY
+    if target_resource is not None and source_definition.get(target_resource, 0) <= 0:
+        return ErrorCode.E_NOT_OKAY
+
+    if target_resource is None:
+        source["resources"][source_resource] -= 1
+        target["resources"][source_resource] = target["resources"].get(source_resource, 0) + 1
+    else:
+        source["resources"][source_resource] -= 1
+        source["resources"][target_resource] = source["resources"].get(target_resource, 0) + 1
+        target["resources"][target_resource] -= 1
+        target["resources"][source_resource] = target["resources"].get(source_resource, 0) + 1
+
+    for plant, definition in ((source, source_definition), (target, target_definition)):
+        if plant.get("ready_to_power") and not can_power_plant(plant, definition):
+            plant["ready_to_power"] = False
 
     return ErrorCode.E_OK

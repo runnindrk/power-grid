@@ -64,11 +64,12 @@ function createReadyToPowerButton(ready, refresh) {
   const button = htmlElement('button', {
     className: 'plant-ready-button',
     type: 'button',
-    title: 'Ready to power',
-    'aria-label': 'Ready to power',
     textContent: '⚡',
     'aria-pressed': ready.pressed,
+    title: ready.disabled ? 'Insufficient Resources' : 'Ready to Power',
+    'aria-label': ready.disabled ? 'Not enough resources to power this plant' : 'Ready to Power',
   });
+  button.disabled = ready.disabled;
 
   button.addEventListener('click', () => {
     postReadyToPower(ready.player_id, ready.plant_id).then(refresh);

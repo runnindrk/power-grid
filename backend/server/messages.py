@@ -29,7 +29,7 @@ PASSED = "Passed"
 PLACEHOLDER_HOUSE_PURCHASE = "Placeholder: House Purchase"
 RESOURCE_PRICE_UPDATED = "Resource Purchase Updated"
 RESOURCE_PURCHASED = "Resources Purchased"
-PLACEHOLDER_BUREAUCRACY = "Placeholder: Bureaucracy"
+BUREAUCRACY_COMPLETED = "Power Plants Operated"
 
 # -------------------------------------------------------------------------------------------------
 # Error messages
