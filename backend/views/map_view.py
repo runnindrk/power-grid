@@ -166,7 +166,7 @@ def connection_views(cities, connections, cost_colors, inactive_connections):
 # -------------------------------------------------------------------------------------------------
 # House spots
 
-def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active):
+def spot_view(config, city, spot_index, spot_count, spot, owner, players, selected, active, available):
     """Describe one house spot of a city: its shape, its owner color and whether it is selected."""
     display = config["display"]
     price = config["rules"]["house_spot_costs"][spot]
@@ -193,6 +193,9 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
     if not active:
         classes.append("inactive")
 
+    if not available and not owner:
+        classes.append("locked")
+
     return {
         "spot": spot,
         "city": city["name"],
@@ -200,7 +203,7 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
         "owner": owner,
         "price": price,
         "aria_label": f"{city['name']}, {spot.replace('_', ' ')}: {owner_name}, price ${price}",
-        "aria_disabled": bool(owner) or not active,
+        "aria_disabled": not available,
         "aria_pressed": is_selected,
         "face_path": wedge_path(city["x"], city["y"], display["map"]["spot_radius"], start_angle, start_angle + arc),
         "face_fill": face_fill,
@@ -212,18 +215,38 @@ def spot_view(config, city, spot_index, spot_count, spot, owner, players, select
 # City view
 
 def city_view(config, index, city, houses, connections, players, selected, active_regions,
-              inactive_connections):
+              inactive_connections, current_player, step):
     """Describe a city, its house spots, and the lines to highlight when hovered."""
     display = config["display"]
 
     spot_names = list(houses.keys())
     active = city["region"].casefold() in active_regions
+    player_has_house = any(owner == current_player for owner in houses.values())
+    pending_city = any(selected_city == city["name"] for selected_city, _ in selected)
     spots = []
 
     for spot_index in range(len(spot_names)):
         spot = spot_names[spot_index]
+        is_selected = (city["name"], spot) in selected
+        unlocked = int(spot.rsplit("_", 1)[-1]) <= step
+        available = (
+            active
+            and houses[spot] is None
+            and unlocked
+            and not player_has_house
+            and (not pending_city or is_selected)
+        )
         spots.append(spot_view(
-            config, city, spot_index, len(spot_names), spot, houses[spot], players, selected, active,
+            config,
+            city,
+            spot_index,
+            len(spot_names),
+            spot,
+            houses[spot],
+            players,
+            selected,
+            active,
+            available,
         ))
 
     highlight_ids = []
@@ -265,7 +288,7 @@ def city_view(config, index, city, houses, connections, players, selected, activ
 # -------------------------------------------------------------------------------------------------
 # Whole map
 
-def build_map_view(config, map_data, map_houses, players, selected, active_regions):
+def build_map_view(config, map_data, map_houses, players, selected, active_regions, current_player, step):
     """Describe the whole map: size, cities with their house spots, lines and cost labels."""
     map_settings = config["display"]["map"]
     scale = map_settings["scale"]
@@ -293,6 +316,8 @@ def build_map_view(config, map_data, map_houses, players, selected, active_regio
             selected,
             active_regions,
             inactive_connections,
+            current_player,
+            step,
         ))
 
     text = config["text"]

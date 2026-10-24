@@ -12,6 +12,7 @@ from backend.rules.common.constants import (
 )
 from backend.rules.common.game_state import GameState, default_player_colors
 from backend.rules.common.player_houses import count_houses
+from backend.rules.common.regions import regions_in_play
 from backend.rules.phase_four_building_houses.building_houses import quote_houses
 from backend.rules.phase_two_auction.auction import highest_active_bid
 from backend.views.plant_view import owned_plant_card
@@ -92,9 +93,20 @@ def house_purchase_view(config, state: GameState, player):
         result["total"] = text["house_prompt"]
         result["buy_disabled"] = False
     else:
-        price = quote_houses(state, player, state.pending_houses)
-        result["total"] = text["house_summary"].format(count=count, price=price)
-        result["buy_disabled"] = False
+        price = quote_houses(
+            state,
+            player,
+            state.pending_houses,
+            config["map_data"],
+            regions_in_play(state, config["number_of_areas"]),
+            config["rules"]["house_spot_costs"],
+        )
+
+        if price is None:
+            result["total"] = text["invalid_house_purchase"]
+        else:
+            result["total"] = text["house_summary"].format(count=count, price=price)
+            result["buy_disabled"] = price > state.player_money[player]
 
     return result
 

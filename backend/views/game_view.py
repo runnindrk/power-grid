@@ -43,6 +43,7 @@ def load_config():
         "text": settings["text"],
         "display": settings["display"],
         "number_of_areas": load_number_of_areas(),
+        "map_data": load_map(),
         "price_scales": resources["price_scales"],
         "resources": resources["resources"],
     }
@@ -135,7 +136,16 @@ def build_view(state: GameState):
 
     return {
         "game_started": state.game_started,
-        "map": build_map_view(config, load_map(), state.map_houses, players, selected_spots, active_regions),
+        "map": build_map_view(
+            config,
+            config["map_data"],
+            state.map_houses,
+            players,
+            selected_spots,
+            active_regions,
+            state.current_player,
+            state.step,
+        ),
         "header": header_view(config, state),
         "players": player_rows,
         "power_plant_market": power_plant_market_view(config, state, deck),

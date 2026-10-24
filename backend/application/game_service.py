@@ -10,6 +10,7 @@ from backend.data.files import (
     load_plant_deck,
     load_replenishment,
     load_resources,
+    load_settings,
 )
 from backend.rules.common.constants import (
     BUILDING_HOUSES,
@@ -34,7 +35,7 @@ from backend.rules.common.regions import regions_in_play
 from backend.rules.common.turn_order import advance_turn, advance_turn_reverse
 from backend.rules.phase_five_bureaucracy.bureaucracy import bureaucracy
 from backend.rules.phase_five_bureaucracy.bureaucracy import finish_bureaucracy
-from backend.rules.phase_four_building_houses.building_houses import buy_houses
+from backend.rules.phase_four_building_houses.building_houses import buy_houses, quote_houses
 from backend.rules.phase_one_turn_order.initial_order import determine_initial_order
 from backend.rules.phase_three_resource_buying.resource_buying import buy_resources, quote_resources
 from backend.rules.phase_two_auction.auction import (
@@ -57,10 +58,6 @@ class GameService:
         self._rng = rng
         self._lock = RLock()
         self._regions_in_play = regions_in_play(self._state, load_number_of_areas())
-        self._city_regions = {
-            name: region.casefold()
-            for name, region, _, _ in load_map()["cities_positions"]
-        }
 
     # ---------------------------------------------------------------------------------------------
     # Reading and saving
@@ -202,26 +199,44 @@ class GameService:
         with self._lock:
             if self._state.current_action != BUILDING_HOUSES:
                 return ErrorCode.E_NOT_OKAY
-            if self._city_regions.get(city) not in self._regions_in_play:
-                return ErrorCode.E_NOT_OKAY
-
-            spots = self._state.map_houses.get(city)
-
-            if spots is None or spot not in spots or spots[spot] is not None:
-                return ErrorCode.E_NOT_OKAY
 
             selection = {"city": city, "spot": spot}
+            pending_houses = list(self._state.pending_houses)
 
-            if selection in self._state.pending_houses:
-                self._state.pending_houses.remove(selection)
+            if selection in pending_houses:
+                pending_houses.remove(selection)
             else:
-                self._state.pending_houses.append(selection)
+                pending_houses.append(selection)
+
+            settings = load_settings()
+            price = quote_houses(
+                self._state,
+                self._state.current_player,
+                pending_houses,
+                load_map(),
+                self._regions_in_play,
+                settings["rules"]["house_spot_costs"],
+            )
+
+            if price is None:
+                return ErrorCode.E_NOT_OKAY
+
+            self._state.pending_houses = pending_houses
 
             return ErrorCode.E_OK
 
     def buy_houses(self, player):
         def rule(state):
-            return buy_houses(state, player, state.pending_houses)
+            settings = load_settings()
+
+            return buy_houses(
+                state,
+                player,
+                state.pending_houses,
+                load_map(),
+                self._regions_in_play,
+                settings["rules"]["house_spot_costs"],
+            )
 
         return self._play_turn(player, BUILDING_HOUSES, rule)
 

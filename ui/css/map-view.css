@@ -52,6 +52,10 @@
   stroke-width: 3;
   filter: brightness(1.25);
 }
+.house-spot.locked:not(.occupied) .house-spot-face {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
 .house-spot:hover:not(:focus) .house-spot-face,
 .house-spot:focus-visible .house-spot-face {
   stroke: #fff;
